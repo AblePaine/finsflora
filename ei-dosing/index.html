@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EI Dosing Calculator — FinsFlora</title>
+<meta name="description" content="Estimative Index dry-fertilizer dosing: grams and teaspoons of KNO3, KH2PO4, K2SO4 and CSM+B for your exact tank volume.">
+<style>
+:root{--bg:#f7faf7;--card:#fff;--ink:#1a2e1a;--muted:#4f624f;--line:#d7e4d8;--accent:#2f6b3a;--accent-soft:#e3f1e5;--warn:#7a4f00;--warn-soft:#fff4dc;--bad:#9b2c2c;--bad-soft:#fde8e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--ink:#e3eee4;--muted:#9fb3a2;--line:#2a3a2e;--accent:#7cc48a;--accent-soft:#1e3324;--warn:#f0c46a;--warn-soft:#332a14;--bad:#f19a9a;--bad-soft:#3a1c1c}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 64px}
+header.site{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+header.site .brand{color:var(--ink);text-decoration:none;font-weight:700;font-size:1.1rem}
+header.site nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}
+header.site nav a{color:var(--muted);text-decoration:none}
+header.site nav a[aria-current]{color:var(--accent);font-weight:600}
+h1{font-size:1.75rem;line-height:1.2;margin:.2em 0 .4em}
+h2{font-size:1.1rem;margin:0 0 12px}
+.why{color:var(--muted);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:600px){.grid.g3{grid-template-columns:repeat(3,1fr)}.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.span2{grid-column:1/-1}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;min-width:0;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.inline{display:flex;gap:6px}.inline input{flex:1 1 0}.inline select{width:auto;flex:0 0 auto}
+@media(max-width:599px){.wide{grid-column:1/-1}}
+td.wrapcell{white-space:normal;text-align:left}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:.8rem;color:var(--muted);font-weight:600}
+tr.key td{font-weight:700;color:var(--accent)}
+.big{font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:.9rem}
+.msg{border-radius:8px;padding:10px 12px;margin:12px 0 0;font-size:.9rem}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg:empty{display:none}
+details{margin:16px 0}
+summary{cursor:pointer;font-weight:600}
+pre{background:var(--accent-soft);border-radius:8px;padding:12px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+.fn{font-size:.85rem;color:var(--muted);padding-left:1.2em}
+.fn li{margin-bottom:6px}
+sup a{text-decoration:none;color:var(--accent)}
+footer{margin-top:32px;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <a class="brand" href="../">FinsFlora</a>
+  <nav>
+    <a href="../tank-volume/">Volume</a>
+    <a href="../ei-dosing/" aria-current="page">EI</a>
+    <a href="../pps-pro/">PPS-Pro</a>
+    <a href="../remineralization/">Remineralize</a>
+    <a href="../co2/">CO2</a>
+  </nav>
+</header>
+
+<h1>EI dosing</h1>
+<p class="why">Estimative Index doses more than plants can use, three times a week, and resets everything with one large weekly water change. You never test for deficiency because there isn't one; the water change caps the build-up. The trade-off is more fertilizer and a mandatory weekly change. Enter your water volume and per-dose targets; this gives you grams and teaspoons for each salt and the week laid out.</p>
+
+<form class="card" id="f" autocomplete="off" onsubmit="return false">
+  <h2>Water</h2>
+  <div class="grid">
+    <div class="wide"><label for="vol">Water volume <a href="../tank-volume/" style="color:var(--accent)">(calculate)</a></label>
+      <div class="inline"><input id="vol" type="number" inputmode="decimal" step="any" min="0" value="75.7">
+        <select id="volUnit" aria-label="Volume unit"><option value="L">L</option><option value="usgal">US gal</option><option value="ukgal">UK gal</option></select></div></div>
+    <div><label for="wc">Weekly water change (%)</label><input id="wc" type="number" inputmode="decimal" step="any" min="1" max="100" value="50"></div>
+  </div>
+  <h2 style="margin-top:20px">Target per dose (ppm = mg/L)</h2>
+  <div class="grid g4">
+    <div><label for="tNO3">NO3 (from KNO3)</label><input id="tNO3" type="number" inputmode="decimal" step="any" min="0" value="7.5"></div>
+    <div><label for="tPO4">PO4 (from KH2PO4)</label><input id="tPO4" type="number" inputmode="decimal" step="any" min="0" value="1.3"></div>
+    <div><label for="tK">Extra K (from K2SO4)</label><input id="tK" type="number" inputmode="decimal" step="any" min="0" value="3"></div>
+    <div><label for="tFe">Fe (from CSM+B)</label><input id="tFe" type="number" inputmode="decimal" step="any" min="0" value="0.1"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Defaults land inside the commonly cited EI weekly range.<sup><a href="#n1">1</a></sup> Set extra K to 0 to skip K2SO4 — KNO3 and KH2PO4 already supply potassium.</p>
+  <details>
+    <summary>Teaspoon calibration &amp; trace mix</summary>
+    <p class="sub">Grams are exact. Teaspoons depend on how your salt packs.<sup><a href="#n2">2</a></sup> To calibrate: weigh 5 level teaspoons, divide by 5, enter it here.</p>
+    <div class="grid g4">
+      <div><label for="dKNO3">KNO3 g/tsp</label><input id="dKNO3" type="number" inputmode="decimal" step="any" min="0" value="5.9"></div>
+      <div><label for="dKH2PO4">KH2PO4 g/tsp</label><input id="dKH2PO4" type="number" inputmode="decimal" step="any" min="0" value="5.8"></div>
+      <div><label for="dK2SO4">K2SO4 g/tsp</label><input id="dK2SO4" type="number" inputmode="decimal" step="any" min="0" value="6.3"></div>
+      <div><label for="dCSM">CSM+B g/tsp</label><input id="dCSM" type="number" inputmode="decimal" step="any" min="0" value="5.0"></div>
+      <div><label for="feP">Fe in trace mix (%)</label><input id="feP" type="number" inputmode="decimal" step="any" min="0" value="6.53"></div>
+    </div>
+  </details>
+</form>
+
+<section class="card" aria-live="polite">
+  <h2>Each dose</h2>
+  <div class="msg bad" id="err"></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Salt · delivers (ppm)</th><th>Grams</th><th>Teaspoons</th></tr></thead>
+      <tbody id="doseTbl"></tbody>
+    </table>
+  </div>
+  <p class="sub" id="doseNote" style="margin:10px 0 0"></p>
+</section>
+
+<section class="card">
+  <h2>The week</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Day</th><th>Dose</th></tr></thead>
+      <tbody id="weekTbl"></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Macros and micros go on different days: phosphate and chelated trace metals can bind each other if dosed together.</p>
+</section>
+
+<section class="card">
+  <h2>Where levels top out</h2>
+  <p class="sub" style="margin-top:0">If plants took up nothing, a weekly change of <span id="wcEcho">50</span>% holds each nutrient below this ceiling.<sup><a href="#n3">3</a></sup> Real levels are lower.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>ppm</th><th>Per dose</th><th>Per week</th><th>Ceiling (before WC)</th><th>After WC</th></tr></thead>
+      <tbody id="ceilTbl"></tbody>
+    </table>
+  </div>
+</section>
+
+<details>
+  <summary>How this is calculated</summary>
+<pre>Mass fraction of an ion = its molar mass ÷ the salt's molar mass
+  KNO3   101.102 g/mol → NO3 0.61328, K 0.38672
+  KH2PO4 136.084 g/mol → PO4 0.69788, K 0.28731
+  K2SO4  174.252 g/mol → K 0.44875, SO4 0.55125
+
+ppm = mg/L, so to add P ppm of an ion to V litres:
+  grams = P × V ÷ (fraction × 1000)
+
+  g KNO3   = NO3 × V ÷ (0.61328 × 1000)
+  g KH2PO4 = PO4 × V ÷ (0.69788 × 1000)
+  g K2SO4  = K   × V ÷ (0.44875 × 1000)
+  g CSM+B  = Fe  × V ÷ (Fe% ÷ 100 × 1000)
+
+Total K per dose = NO3 × 39.098/62.004 + PO4 × 39.098/94.970 + extra K
+NO3 as N (NO3-N) = NO3 × 14.007/62.004
+teaspoons = grams ÷ (g per level US tsp)
+
+Ceiling with no uptake: added D ppm/week, fraction f changed weekly.
+  Steady state: after = (1 − f)(after + D) → after = D(1 − f)/f
+  before = after + D = D/f</pre>
+</details>
+
+<h2>Notes</h2>
+<ol class="fn">
+  <li id="n1"><strong>EI targets are a range, not a point.</strong> Commonly cited weekly EI levels are about 20–30 ppm NO3, 3 ppm PO4, 20–30 ppm K and 0.5 ppm Fe. The teaspoon charts that circulate for EI work out higher than the defaults here: <span id="barr">—</span> That gap is the method working as designed — excess is intentional and the water change is the cap. Choose your own targets; the arithmetic doesn't change.</li>
+  <li id="n2"><strong>Teaspoon densities are typical figures, not verified constants.</strong> Crystal size, humidity and how level you scrape all move them by 10% or more. Use grams if you own a 0.01 g scale; otherwise calibrate once with the method above.</li>
+  <li id="n3"><strong>The ceiling ignores plant uptake</strong>, so it's the most that can build up, not a prediction. It assumes one water change of the same size every week.</li>
+  <li id="n4"><strong>Trace mix composition.</strong> Iron defaults to 6.53%, the Plantex CSM+B label figure. Other elements are scaled from that label (Mn 1.87, Zn 0.40, Cu 0.09, Mo 0.05, B 1.18, Mg 1.50%). If you use a different mix, enter its iron %; the co-delivered figures will only be right for CSM+B.</li>
+</ol>
+<footer>FinsFlora · planted tank science, minus the guesswork.</footer>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const fmt = (x, d = 2) => Number.isFinite(x) ? x.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+const store = {
+  get(k) { try { return localStorage.getItem('finsflora.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('finsflora.' + k, v); } catch (e) { /* storage unavailable */ } }
+};
+const VOL = { L: 1, usgal: 3.785411784, ukgal: 4.54609 }; // litres per unit, exact
+
+// Atomic masses, IUPAC conventional values (g/mol).
+const A = { K: 39.098, N: 14.007, O: 15.999, P: 30.974, H: 1.008, S: 32.06 };
+// Ion and salt molar masses built from atoms so the fractions are traceable.
+const M = {
+  NO3: A.N + 3 * A.O,                     // 62.004
+  PO4: A.P + 4 * A.O,                     // 94.970
+  SO4: A.S + 4 * A.O,                     // 96.056
+  KNO3: A.K + A.N + 3 * A.O,              // 101.102
+  KH2PO4: A.K + 2 * A.H + A.P + 4 * A.O,  // 136.084
+  K2SO4: 2 * A.K + A.S + 4 * A.O          // 174.252
+};
+// Mass fraction of each ion in each salt: fraction = M(ion) × count ÷ M(salt).
+const F = {
+  KNO3: { NO3: M.NO3 / M.KNO3, K: A.K / M.KNO3 },              // 0.61328, 0.38672
+  KH2PO4: { PO4: M.PO4 / M.KH2PO4, K: A.K / M.KH2PO4 },        // 0.69788, 0.28731
+  K2SO4: { K: 2 * A.K / M.K2SO4, SO4: M.SO4 / M.K2SO4 }        // 0.44875, 0.55125
+};
+// Plantex CSM+B label composition, % by mass. Scaled by the user's Fe % so ratios hold.
+const CSM = { Fe: 6.53, Mn: 1.87, Zn: 0.40, Cu: 0.09, Mo: 0.05, B: 1.18, Mg: 1.50 };
+
+/** grams of salt to add `ppm` of an ion (mass fraction `frac`) to `L` litres. ppm = mg/L. */
+const gramsFor = (ppm, L, frac) => ppm * L / (frac * 1000);
+
+/**
+ * Pure EI engine. Inputs in litres and ppm; returns grams per dose plus the
+ * ppm each salt delivers (recomputed forward from grams as a round-trip check).
+ */
+function eiDose({ L, NO3, PO4, Kx, Fe, feP }) {
+  const g = {
+    KNO3: gramsFor(NO3, L, F.KNO3.NO3),
+    KH2PO4: gramsFor(PO4, L, F.KH2PO4.PO4),
+    K2SO4: gramsFor(Kx, L, F.K2SO4.K),
+    CSM: feP > 0 ? gramsFor(Fe, L, feP / 100) : 0
+  };
+  const ppm = (grams, frac) => grams * 1000 * frac / L;
+  const scale = feP / CSM.Fe; // other CSM elements move with the stated iron %
+  const trace = {};
+  for (const el in CSM) trace[el] = ppm(g.CSM, CSM[el] * scale / 100);
+  const K = { fromKNO3: ppm(g.KNO3, F.KNO3.K), fromKH2PO4: ppm(g.KH2PO4, F.KH2PO4.K), fromK2SO4: ppm(g.K2SO4, F.K2SO4.K) };
+  return {
+    g, trace, K,
+    NO3: ppm(g.KNO3, F.KNO3.NO3),
+    NO3N: ppm(g.KNO3, F.KNO3.NO3) * A.N / M.NO3,
+    PO4: ppm(g.KH2PO4, F.KH2PO4.PO4),
+    SO4: ppm(g.K2SO4, F.K2SO4.SO4),
+    Ktotal: K.fromKNO3 + K.fromKH2PO4 + K.fromK2SO4
+  };
+}
+
+/** Steady-state no-uptake ceiling for D ppm/week and weekly change fraction f. See SPEC §0. */
+const ceiling = (D, f) => ({ before: D / f, after: D * (1 - f) / f });
+
+/** Teaspoons as a measuring-spoon combination, rounded to the nearest 1/32 tsp. */
+function spoons(tsp) {
+  if (!(tsp > 0)) return '0';
+  const n = Math.round(tsp * 32);
+  if (n === 0) return '< 1/64';
+  const parts = [];
+  const whole = Math.floor(n / 32);
+  if (whole) parts.push(String(whole));
+  let rem = n % 32;
+  for (const [v, s] of [[16, '1/2'], [8, '1/4'], [4, '1/8'], [2, '1/16'], [1, '1/32']]) {
+    if (rem >= v) { parts.push(s); rem -= v; }
+  }
+  return parts.join(' + ');
+}
+
+function render() {
+  const unit = $('volUnit').value;
+  const L = num('vol') * VOL[unit];
+  const f = num('wc') / 100;
+  const inp = { L, NO3: num('tNO3'), PO4: num('tPO4'), Kx: num('tK'), Fe: num('tFe'), feP: num('feP') };
+  const dens = { KNO3: num('dKNO3'), KH2PO4: num('dKH2PO4'), K2SO4: num('dK2SO4'), CSM: num('dCSM') };
+  $('wcEcho').textContent = fmt(num('wc'), 0);
+  $('err').textContent = '';
+  const bad = !(L > 0) ? 'Enter your water volume.'
+    : !(f > 0 && f <= 1) ? 'Water change must be between 1 and 100%.'
+    : [inp.NO3, inp.PO4, inp.Kx, inp.Fe].some(v => !(v >= 0)) ? 'Targets must be zero or more.'
+    : !(inp.feP > 0) ? 'Enter the iron % of your trace mix.' : '';
+  if (bad) { $('err').textContent = bad; ['doseTbl', 'weekTbl', 'ceilTbl'].forEach(id => $(id).innerHTML = ''); return; }
+  store.set('volumeL', L.toFixed(2)); store.set('volUnit', unit);
+
+  const r = eiDose(inp);
+  const tsp = k => r.g[k] / dens[k];
+  const tspCell = k => dens[k] > 0 ? `${spoons(tsp(k))}<div class="sub">${fmt(tsp(k), 3)} tsp</div>` : '—';
+  const t = r.trace;
+  $('doseTbl').innerHTML = [
+    ['KNO3', 'KNO3', `${fmt(r.NO3)} NO3 · ${fmt(r.K.fromKNO3)} K`],
+    ['KH2PO4', 'KH2PO4', `${fmt(r.PO4)} PO4 · ${fmt(r.K.fromKH2PO4)} K`],
+    ['K2SO4', 'K2SO4', `${fmt(r.K.fromK2SO4)} K · ${fmt(r.SO4)} SO4`],
+    ['CSM+B', 'CSM', `${fmt(t.Fe, 3)} Fe · ${fmt(t.Mn, 3)} Mn · ${fmt(t.B, 3)} B`]
+  ].map(([name, k, d]) => `<tr><td>${name}<div class="sub">${d}</div></td><td>${fmt(r.g[k], 3)} g</td><td>${tspCell(k)}</td></tr>`).join('');
+  $('doseNote').textContent = `Total K per macro dose: ${fmt(r.Ktotal)} ppm. NO3 as nitrogen (NO3-N): ${fmt(r.NO3N)} ppm. ` +
+    `CSM+B also adds ${fmt(t.Zn, 4)} Zn, ${fmt(t.Cu, 4)} Cu, ${fmt(t.Mo, 4)} Mo, ${fmt(t.Mg, 3)} Mg ppm.`;
+
+  const macro = `KNO3 ${fmt(r.g.KNO3, 2)} g · KH2PO4 ${fmt(r.g.KH2PO4, 2)} g` + (r.g.K2SO4 > 0 ? ` · K2SO4 ${fmt(r.g.K2SO4, 2)} g` : '');
+  const micro = `CSM+B ${fmt(r.g.CSM, 3)} g`;
+  const days = [['Mon', macro], ['Tue', micro], ['Wed', macro], ['Thu', micro], ['Fri', macro], ['Sat', micro],
+    ['Sun', `Change ${fmt(f * L, 1)} L (${fmt(f * 100, 0)}%). No dosing.`]];
+  $('weekTbl').innerHTML = days.map(([d, x]) => `<tr><td>${d}</td><td class="wrapcell">${x}</td></tr>`).join('');
+
+  $('ceilTbl').innerHTML = [['NO3', r.NO3], ['PO4', r.PO4], ['K', r.Ktotal], ['Fe', t.Fe]].map(([ion, dose]) => {
+    const wk = 3 * dose, c = ceiling(wk, f), d = ion === 'Fe' ? 3 : 2;
+    return `<tr><td>${ion}</td><td>${fmt(dose, d)}</td><td>${fmt(wk, d)}</td><td>${fmt(c.before, d)}</td><td>${fmt(c.after, d)}</td></tr>`;
+  }).join('');
+
+  // Footnote 1: back-calculate the circulated 20 US gal line (1/4 tsp KNO3, 1/16 tsp KH2PO4,
+  // 1/16 tsp CSM+B per dose) using the densities entered above.
+  const L20 = 20 * VOL.usgal;
+  const b = {
+    NO3: 0.25 * dens.KNO3 * 1000 * F.KNO3.NO3 / L20,
+    PO4: dens.KH2PO4 / 16 * 1000 * F.KH2PO4.PO4 / L20,
+    Fe: dens.CSM / 16 * 1000 * (inp.feP / 100) / L20
+  };
+  $('barr').textContent = `the widely shared 20 US gal line (¼ tsp KNO3, 1/16 tsp KH2PO4, 1/16 tsp CSM+B per dose), at the densities entered, gives ` +
+    `${fmt(b.NO3, 1)} ppm NO3, ${fmt(b.PO4, 1)} ppm PO4 and ${fmt(b.Fe, 2)} ppm Fe per dose.`;
+}
+
+// Pre-fill volume from the tank calculator if the user has used it on this device.
+(function prefill() {
+  const L = parseFloat(store.get('volumeL')), u = store.get('volUnit');
+  if (u && VOL[u]) $('volUnit').value = u;
+  if (L > 0) $('vol').value = +(L / VOL[$('volUnit').value]).toFixed(1);
+})();
+// Keep the physical volume when switching units.
+let volPrev = $('volUnit').value;
+$('volUnit').addEventListener('change', e => {
+  const v = num('vol');
+  if (v > 0) $('vol').value = +(v * VOL[volPrev] / VOL[e.target.value]).toFixed(1);
+  volPrev = e.target.value;
+});
+$('f').addEventListener('input', render);
+$('f').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tank Volume Calculator — FinsFlora</title>
+<meta name="description" content="True aquarium water volume from tank dimensions, minus glass, freeboard, substrate and hardscape.">
+<style>
+:root{--bg:#f7faf7;--card:#fff;--ink:#1a2e1a;--muted:#4f624f;--line:#d7e4d8;--accent:#2f6b3a;--accent-soft:#e3f1e5;--warn:#7a4f00;--warn-soft:#fff4dc;--bad:#9b2c2c;--bad-soft:#fde8e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--ink:#e3eee4;--muted:#9fb3a2;--line:#2a3a2e;--accent:#7cc48a;--accent-soft:#1e3324;--warn:#f0c46a;--warn-soft:#332a14;--bad:#f19a9a;--bad-soft:#3a1c1c}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 64px}
+header.site{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+header.site .brand{color:var(--ink);text-decoration:none;font-weight:700;font-size:1.1rem}
+header.site nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}
+header.site nav a{color:var(--muted);text-decoration:none}
+header.site nav a[aria-current]{color:var(--accent);font-weight:600}
+h1{font-size:1.75rem;line-height:1.2;margin:.2em 0 .4em}
+h2{font-size:1.1rem;margin:0 0 12px}
+.why{color:var(--muted);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:600px){.grid.g3{grid-template-columns:repeat(3,1fr)}.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.span2{grid-column:1/-1}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;min-width:0;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.inline{display:flex;gap:6px}.inline input{flex:1 1 0}.inline select{width:auto;flex:0 0 auto}
+@media(max-width:599px){.wide{grid-column:1/-1}}
+td.wrapcell{white-space:normal;text-align:left}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:.8rem;color:var(--muted);font-weight:600}
+tr.key td{font-weight:700;color:var(--accent)}
+.big{font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:.9rem}
+.msg{border-radius:8px;padding:10px 12px;margin:12px 0 0;font-size:.9rem}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg:empty{display:none}
+details{margin:16px 0}
+summary{cursor:pointer;font-weight:600}
+pre{background:var(--accent-soft);border-radius:8px;padding:12px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+.fn{font-size:.85rem;color:var(--muted);padding-left:1.2em}
+.fn li{margin-bottom:6px}
+sup a{text-decoration:none;color:var(--accent)}
+footer{margin-top:32px;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <a class="brand" href="../">FinsFlora</a>
+  <nav>
+    <a href="../tank-volume/" aria-current="page">Volume</a>
+    <a href="../ei-dosing/">EI</a>
+    <a href="../pps-pro/">PPS-Pro</a>
+    <a href="../remineralization/">Remineralize</a>
+    <a href="../co2/">CO2</a>
+  </nav>
+</header>
+
+<h1>Tank volume</h1>
+<p class="why">Every dose and every water change is a fraction of your water, so the number has to be the water, not the box. A "20 gallon" tank holds noticeably less once you take off the glass, the gap under the rim, the substrate and the rocks. Enter what you can measure; this gives you the water column you should dose against, and passes it to the other calculators on this site.</p>
+
+<form class="card" id="f" autocomplete="off" onsubmit="return false">
+  <h2>Tank</h2>
+  <div class="grid g3">
+    <div><label for="unit">Units</label>
+      <select id="unit"><option value="cm">cm</option><option value="in">inches</option></select></div>
+    <div><label for="side">Measured</label>
+      <select id="side"><option value="outside">Outside of glass</option><option value="inside">Inside of glass</option></select></div>
+    <div><label for="glass">Glass thickness (mm)</label><input id="glass" type="number" inputmode="decimal" step="any" min="0" value="6"></div>
+    <div><label for="L">Length</label><input id="L" type="number" inputmode="decimal" step="any" min="0" value="60"></div>
+    <div><label for="W">Width (front to back)</label><input id="W" type="number" inputmode="decimal" step="any" min="0" value="30"></div>
+    <div><label for="H">Height</label><input id="H" type="number" inputmode="decimal" step="any" min="0" value="36"></div>
+    <div class="span2"><label for="gap">Gap from water surface to top of glass</label><input id="gap" type="number" inputmode="decimal" step="any" min="0" value="2"></div>
+  </div>
+  <h2 style="margin-top:20px">Substrate &amp; hardscape</h2>
+  <div class="grid g3">
+    <div><label for="dF">Substrate depth, front</label><input id="dF" type="number" inputmode="decimal" step="any" min="0" value="3"></div>
+    <div><label for="dB">Substrate depth, back</label><input id="dB" type="number" inputmode="decimal" step="any" min="0" value="8"></div>
+    <div><label for="sub">Substrate type</label>
+      <select id="sub">
+        <option value="0.38">Sand (porosity 0.38)</option>
+        <option value="0.38">Gravel (porosity 0.38)</option>
+        <option value="0.55" selected>Aquasoil (porosity 0.55)</option>
+        <option value="custom">Custom porosity…</option>
+      </select></div>
+    <div id="phiWrap" hidden><label for="phi">Porosity (0–1)</label><input id="phi" type="number" inputmode="decimal" step="0.01" min="0" max="0.95" value="0.40"></div>
+    <div><label for="hard">Rock &amp; wood volume (L)</label><input id="hard" type="number" inputmode="decimal" step="any" min="0" value="0"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Sloped substrate: measure depth at the front and back glass; the average is used. Hardscape: submerge it in a full bucket and measure what overflows, or leave at 0.</p>
+</form>
+
+<section class="card" aria-live="polite">
+  <h2>Water to dose against</h2>
+  <div class="big" id="outL">—</div>
+  <div class="sub" id="outAlt"></div>
+  <div class="msg bad" id="err"></div>
+  <div class="msg warn" id="warn"></div>
+  <div class="scroll" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Volume</th><th>Litres</th><th>US gal</th><th>UK gal</th></tr></thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin:12px 0 0">Saved for the EI, PPS-Pro and remineralization calculators on this device.</p>
+</section>
+
+<details>
+  <summary>How this is calculated</summary>
+<pre>Li = L − 2t,  Wi = W − 2t,  Hi = H − t     (outside dims, t = glass;
+                                            bottom pane sits under the sides)
+hw = Hi − gap                               water height
+d  = (d_front + d_back) / 2                 mean substrate depth (linear slope)
+
+nominal     = L × W × H                     what the box says
+glass box   = Li × Wi × hw                  filled to the waterline
+substrate   = Li × Wi × d                   bulk (grains + pores)
+pore water  = substrate × porosity
+WATER COLUMN = glass box − substrate − hardscape      ← dose to this
+all water    = water column + pore water
+
+cm³ ÷ 1000 = L;  1 US gal = 3.785411784 L;  1 UK gal = 4.54609 L</pre>
+</details>
+
+<h2>Notes</h2>
+<ol class="fn">
+  <li id="n1"><strong>Which number to dose against.</strong> Water inside the substrate trades places with the water column slowly, so it doesn't dilute a dose the way open water does. We dose against the water column and show pore water separately; if you'd rather count it, use the "all water" line.</li>
+  <li id="n2"><strong>Porosity is typical, not measured.</strong> Packed sand and gravel run about 0.35–0.40. Aquasoil granules are porous themselves, so the figure is higher and varies by brand; 0.55 is a midpoint. It only affects the pore-water line, not the water column.</li>
+  <li id="n3"><strong>Outside measurements assume a rimless build</strong> (bottom pane under the side panes). Framed tanks and tanks with a raised bottom differ. If you can measure inside the glass, do that and the glass thickness is ignored.</li>
+</ol>
+<footer>FinsFlora · planted tank science, minus the guesswork.</footer>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const fmt = (x, d = 1) => Number.isFinite(x) ? x.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+const store = {
+  get(k) { try { return localStorage.getItem('finsflora.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('finsflora.' + k, v); } catch (e) { /* storage unavailable */ } }
+};
+const US_GAL = 3.785411784; // L, exact by definition
+const UK_GAL = 4.54609;     // L, exact by definition
+const CM_PER_IN = 2.54;     // exact
+
+/**
+ * Pure engine. All lengths in cm, glass in mm, hardscape in L. Returns litres.
+ *
+ * Derivation:
+ *  - Outside dims: the two side panes eat 2t from length and width; a rimless
+ *    tank's bottom pane sits under the walls, eating t from height once.
+ *  - Water height = inside height − gap to rim.
+ *  - A substrate sloped linearly from d_front to d_back has the same volume as a
+ *    flat bed at the mean depth (area of a trapezoid).
+ *  - The substrate's bulk volume displaces water from the column; a fraction
+ *    phi of that bulk is pore space that still holds (slow-exchanging) water.
+ */
+function tankVolume({ L, W, H, inside, glassMm, gap, dFront, dBack, phi, hardL }) {
+  const t = inside ? 0 : glassMm / 10;
+  const Li = L - 2 * t, Wi = W - 2 * t, Hi = H - t;
+  const hw = Hi - gap;
+  const d = (dFront + dBack) / 2;
+  if (!(Li > 0 && Wi > 0 && Hi > 0)) return { error: 'Glass thickness leaves no inside space — check dimensions and units.' };
+  if (!(hw > 0)) return { error: 'The gap to the rim is taller than the tank.' };
+  if (!(d < hw)) return { error: 'Substrate is deeper than the water.' };
+  const nominal = L * W * H / 1000;
+  const wet = Li * Wi * hw / 1000;
+  const substrate = Li * Wi * d / 1000;
+  const pore = substrate * phi;
+  const column = wet - substrate - hardL;
+  if (!(column > 0)) return { error: 'Hardscape volume exceeds the water column.' };
+  return { nominal, wet, substrate, pore, column, total: column + pore };
+}
+
+function render() {
+  const toCm = $('unit').value === 'in' ? CM_PER_IN : 1;
+  const inside = $('side').value === 'inside';
+  $('glass').disabled = inside;
+  const custom = $('sub').value === 'custom';
+  $('phiWrap').hidden = !custom;
+  const phi = custom ? num('phi') : parseFloat($('sub').value);
+  const vals = {
+    L: num('L') * toCm, W: num('W') * toCm, H: num('H') * toCm, inside,
+    glassMm: num('glass') || 0, gap: (num('gap') || 0) * toCm,
+    dFront: (num('dF') || 0) * toCm, dBack: (num('dB') || 0) * toCm,
+    phi, hardL: num('hard') || 0
+  };
+  $('err').textContent = ''; $('warn').textContent = '';
+  if (![vals.L, vals.W, vals.H].every(v => v > 0)) { $('err').textContent = 'Enter length, width and height.'; clear(); return; }
+  if (!(phi >= 0 && phi < 1)) { $('err').textContent = 'Porosity must be between 0 and 1.'; clear(); return; }
+  const r = tankVolume(vals);
+  if (r.error) { $('err').textContent = r.error; clear(); return; }
+
+  if (!inside && vals.glassMm === 0) $('warn').textContent = 'Glass thickness is 0 — outside dimensions will overstate the volume.';
+  $('outL').textContent = fmt(r.column) + ' L';
+  $('outAlt').textContent = fmt(r.column / US_GAL) + ' US gal · ' + fmt(r.column / UK_GAL) + ' UK gal · ' + Math.round(r.column / r.nominal * 100) + '% of nominal';
+  const rows = [
+    ['Nominal (outside box)', r.nominal],
+    ['Glass box to waterline', r.wet],
+    ['Substrate, bulk (for buying bags)', r.substrate],
+    ['Pore water in substrate', r.pore],
+    ['Water column — dose to this', r.column, true],
+    ['All water incl. pore water', r.total]
+  ];
+  $('tbl').innerHTML = rows.map(([k, v, key]) =>
+    `<tr${key ? ' class="key"' : ''}><td>${k}</td><td>${fmt(v)}</td><td>${fmt(v / US_GAL)}</td><td>${fmt(v / UK_GAL)}</td></tr>`).join('');
+  store.set('volumeL', r.column.toFixed(2));
+}
+function clear() { $('outL').textContent = '—'; $('outAlt').textContent = ''; $('tbl').innerHTML = ''; }
+
+$('f').addEventListener('input', render);
+$('f').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
