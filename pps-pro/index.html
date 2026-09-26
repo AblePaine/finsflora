@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PPS-Pro Dosing Calculator — FinsFlora</title>
+<meta name="description" content="PPS-Pro daily dosing: grams of KNO3, KH2PO4, MgSO4 and CSM+B per stock bottle, and mL per day, for your exact tank volume.">
+<style>
+:root{--bg:#f7faf7;--card:#fff;--ink:#1a2e1a;--muted:#4f624f;--line:#d7e4d8;--accent:#2f6b3a;--accent-soft:#e3f1e5;--warn:#7a4f00;--warn-soft:#fff4dc;--bad:#9b2c2c;--bad-soft:#fde8e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--ink:#e3eee4;--muted:#9fb3a2;--line:#2a3a2e;--accent:#7cc48a;--accent-soft:#1e3324;--warn:#f0c46a;--warn-soft:#332a14;--bad:#f19a9a;--bad-soft:#3a1c1c}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 64px}
+header.site{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+header.site .brand{color:var(--ink);text-decoration:none;font-weight:700;font-size:1.1rem}
+header.site nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}
+header.site nav a{color:var(--muted);text-decoration:none}
+header.site nav a[aria-current]{color:var(--accent);font-weight:600}
+h1{font-size:1.75rem;line-height:1.2;margin:.2em 0 .4em}
+h2{font-size:1.1rem;margin:0 0 12px}
+.why{color:var(--muted);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:600px){.grid.g3{grid-template-columns:repeat(3,1fr)}.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.span2{grid-column:1/-1}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;min-width:0;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.inline{display:flex;gap:6px}.inline input{flex:1 1 0}.inline select{width:auto;flex:0 0 auto}
+@media(max-width:599px){.wide{grid-column:1/-1}}
+td.wrapcell{white-space:normal;text-align:left}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:.8rem;color:var(--muted);font-weight:600}
+tr.key td{font-weight:700;color:var(--accent)}
+.big{font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:.9rem}
+.msg{border-radius:8px;padding:10px 12px;margin:12px 0 0;font-size:.9rem}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg:empty{display:none}
+details{margin:16px 0}
+summary{cursor:pointer;font-weight:600}
+pre{background:var(--accent-soft);border-radius:8px;padding:12px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+.fn{font-size:.85rem;color:var(--muted);padding-left:1.2em}
+.fn li{margin-bottom:6px}
+sup a{text-decoration:none;color:var(--accent)}
+footer{margin-top:32px;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <a class="brand" href="../">FinsFlora</a>
+  <nav>
+    <a href="../tank-volume/">Volume</a>
+    <a href="../ei-dosing/">EI</a>
+    <a href="../pps-pro/" aria-current="page">PPS-Pro</a>
+    <a href="../remineralization/">Remineralize</a>
+    <a href="../co2/">CO2</a>
+  </nav>
+</header>
+
+<h1>PPS-Pro dosing</h1>
+<p class="why">PPS-Pro doses a small amount every day, aiming to replace roughly what plants use rather than flood the tank. Levels stay low and steady, water changes can be smaller, and it suits lower-light or lower-CO2 tanks. The trade-off: it's lean on purpose, so you watch the plants and adjust. You mix two stock bottles once; this tells you what goes in them and how many mL to dose each day.</p>
+
+<form class="card" id="f" autocomplete="off" onsubmit="return false">
+  <h2>Water &amp; bottles</h2>
+  <div class="grid">
+    <div class="wide"><label for="vol">Water volume <a href="../tank-volume/" style="color:var(--accent)">(calculate)</a></label>
+      <div class="inline"><input id="vol" type="number" inputmode="decimal" step="any" min="0" value="75.7">
+        <select id="volUnit" aria-label="Volume unit"><option value="L">L</option><option value="usgal">US gal</option><option value="ukgal">UK gal</option></select></div></div>
+    <div><label for="wc">Weekly water change (%)</label><input id="wc" type="number" inputmode="decimal" step="any" min="1" max="100" value="30"></div>
+    <div><label for="bottle">Bottle size (mL, final volume)</label><input id="bottle" type="number" inputmode="decimal" step="any" min="0" value="500"></div>
+    <div><label for="dose">Daily dose from each bottle (mL)</label><input id="dose" type="number" inputmode="decimal" step="any" min="0" placeholder="auto"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Leave the daily dose blank for the PPS-Pro standard: 1 mL per 10 US gal. Pick a round number that suits your pump or syringe.</p>
+  <h2 style="margin-top:20px">Target per day (ppm = mg/L)</h2>
+  <div class="grid g3">
+    <div><label for="tNO3">NO3 (KNO3)</label><input id="tNO3" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div><label for="tPO4">PO4 (KH2PO4)</label><input id="tPO4" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div><label for="tMg">Mg (MgSO4·7H2O)</label><input id="tMg" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div><label for="tK">Extra K (K2SO4)</label><input id="tK" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div><label for="tFe">Fe (CSM+B)</label><input id="tFe" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div><label for="feP">Fe in trace mix (%)</label><input id="feP" type="number" inputmode="decimal" step="any" min="0" value="6.53"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Defaults are what the standard PPS-Pro recipe delivers.<sup><a href="#n1">1</a></sup> <button type="button" id="reset" style="font:inherit;font-size:.85rem;background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:0">Reset to recipe</button></p>
+</form>
+
+<section class="card" aria-live="polite">
+  <h2>Mix</h2>
+  <div class="msg bad" id="err"></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Into the bottle</th><th>Grams</th><th>g / 100 mL</th></tr></thead>
+      <tbody id="mixTbl"></tbody>
+    </table>
+  </div>
+  <div class="msg warn" id="warn"></div>
+  <p class="sub" style="margin:10px 0 0">Dissolve in about three-quarters of the water, then top up to the bottle size. Grams are per bottle, not per dose.</p>
+</section>
+
+<section class="card">
+  <h2>Dose</h2>
+  <div class="big" id="doseBig">—</div>
+  <div class="sub" id="doseSub"></div>
+</section>
+
+<section class="card">
+  <h2>Where levels top out</h2>
+  <p class="sub" style="margin-top:0">If plants took up nothing, a weekly change of <span id="wcEcho">30</span>% holds each nutrient below this ceiling.<sup><a href="#n3">3</a></sup> PPS-Pro assumes plants use most of it, so real levels should sit far lower.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>ppm</th><th>Per day</th><th>Per week</th><th>Ceiling (before WC)</th><th>After WC</th></tr></thead>
+      <tbody id="ceilTbl"></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin:10px 0 0">For comparison, the EI defaults on this site add 22.5 NO3, 3.9 PO4 and 0.30 Fe ppm per week.</p>
+</section>
+
+<details>
+  <summary>How this is calculated</summary>
+<pre>Standard recipe (reference only; targets are editable):
+  Macro bottle: 500 mL + 58 g KNO3 + 4 g KH2PO4 + 33 g MgSO4·7H2O
+  Micro bottle: 500 mL + 8 g CSM+B
+  Dose: 1 mL of each per 10 US gal (37.854 L) per day
+
+Daily ppm the recipe delivers = g/500 mL × 1000 mg/g × 1 mL ÷ 37.854 L × fraction
+  NO3  58 g × 0.61328 → 1.879     PO4 4 g × 0.69788 → 0.147
+  Mg   33 g × 0.09861 → 0.172     Fe  8 g × 0.0653  → 0.0276
+  K    58 × 0.38672 + 4 × 0.28731 → 1.246
+
+Your bottle, for any target:
+  doses per bottle = bottle mL ÷ dose mL
+  g in bottle = target ppm × V ÷ (fraction × 1000) × doses per bottle
+
+Mass fractions: KNO3 NO3 0.61328 · KH2PO4 PO4 0.69788 · K2SO4 K 0.44875
+                MgSO4·7H2O (246.466 g/mol) Mg 0.09861
+
+Ceiling with no uptake: D = 7 × daily ppm, f = weekly change fraction
+  before WC = D/f;  after WC = D(1 − f)/f</pre>
+</details>
+
+<h2>Notes</h2>
+<ol class="fn">
+  <li id="n1"><strong>Recipe provenance.</strong> 58 g KNO3, 4 g KH2PO4 and 33 g MgSO4·7H2O per 500 mL, plus 8 g CSM+B per 500 mL, dosed at 1 mL per 10 US gal, is the PPS-Pro recipe as it is widely circulated. We haven't been able to check it against the original author's page. If your source differs, type its daily ppm into the targets; everything else follows.</li>
+  <li id="n2"><strong>Solubility.</strong> Limits used are single-salt figures at 20 °C (g per 100 mL water): KNO3 31.6, KH2PO4 22.6, K2SO4 11.1, MgSO4·7H2O 71. Several potassium salts in one bottle hold less than each would alone, so we warn at 60% of any limit. Cold storage lowers it further.</li>
+  <li id="n3"><strong>The ceiling ignores plant uptake</strong>, so it's the most that can build up, not a prediction. It assumes one water change of the same size every week.</li>
+  <li id="n4"><strong>Trace mix.</strong> Fe % defaults to the Plantex CSM+B label (6.53%). A different mix needs its own iron %.</li>
+</ol>
+<footer>FinsFlora · planted tank science, minus the guesswork.</footer>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const fmt = (x, d = 2) => Number.isFinite(x) ? x.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+const store = {
+  get(k) { try { return localStorage.getItem('finsflora.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('finsflora.' + k, v); } catch (e) { /* storage unavailable */ } }
+};
+const VOL = { L: 1, usgal: 3.785411784, ukgal: 4.54609 }; // litres per unit, exact
+
+// Atomic masses, IUPAC conventional values (g/mol).
+const A = { K: 39.098, N: 14.007, O: 15.999, P: 30.974, H: 1.008, S: 32.06, Mg: 24.305 };
+const M = {
+  NO3: A.N + 3 * A.O,                                    // 62.004
+  PO4: A.P + 4 * A.O,                                    // 94.970
+  KNO3: A.K + A.N + 3 * A.O,                             // 101.102
+  KH2PO4: A.K + 2 * A.H + A.P + 4 * A.O,                 // 136.084
+  K2SO4: 2 * A.K + A.S + 4 * A.O,                        // 174.252
+  MgSO4_7H2O: A.Mg + A.S + 4 * A.O + 7 * (2 * A.H + A.O) // 246.466
+};
+// Mass fraction of the target ion in each salt.
+const F = {
+  KNO3: M.NO3 / M.KNO3,            // NO3 0.61328
+  KNO3_K: A.K / M.KNO3,            // K   0.38672
+  KH2PO4: M.PO4 / M.KH2PO4,        // PO4 0.69788
+  KH2PO4_K: A.K / M.KH2PO4,        // K   0.28731
+  K2SO4: 2 * A.K / M.K2SO4,        // K   0.44875
+  MgSO4: A.Mg / M.MgSO4_7H2O       // Mg  0.09861
+};
+// Single-salt solubility at 20 °C, g per 100 mL water. Mixed bottles hold less (see note 2).
+const SOLUBILITY = { KNO3: 31.6, KH2PO4: 22.6, K2SO4: 11.1, MgSO4: 71 };
+const WARN_AT = 0.6;
+
+// Standard PPS-Pro recipe → daily ppm it delivers. See SPEC §3.
+// One 1 mL dose carries (g ÷ 500 mL) × 1000 mg/g of salt into 10 US gal (37.854 L):
+// ppm/day = g/500 × 1000 × 1 mL ÷ 37.854 L × ion fraction
+const RECIPE = { bottleMl: 500, doseMlPer10Gal: 1, KNO3: 58, KH2PO4: 4, MgSO4: 33, CSM: 8, feP: 6.53 };
+const REF_L = 10 * VOL.usgal;
+const perDoseMg = g => g / RECIPE.bottleMl * 1000 * RECIPE.doseMlPer10Gal; // mg of salt in one 1 mL dose
+const RECIPE_PPM = {
+  NO3: perDoseMg(RECIPE.KNO3) / REF_L * F.KNO3,          // 1.879
+  PO4: perDoseMg(RECIPE.KH2PO4) / REF_L * F.KH2PO4,      // 0.147
+  Mg: perDoseMg(RECIPE.MgSO4) / REF_L * F.MgSO4,         // 0.172
+  Kx: 0,
+  Fe: perDoseMg(RECIPE.CSM) / REF_L * RECIPE.feP / 100   // 0.0276
+};
+
+/**
+ * Pure PPS-Pro engine.
+ * g in bottle = (grams to hit target once in V litres) × (number of doses the bottle holds).
+ * grams once = ppm × V ÷ (fraction × 1000)   [ppm = mg/L]
+ */
+function ppsPro({ L, bottleMl, doseMl, NO3, PO4, Mg, Kx, Fe, feP }) {
+  const doses = bottleMl / doseMl;
+  const once = (ppm, frac) => ppm * L / (frac * 1000);
+  const g = {
+    KNO3: once(NO3, F.KNO3) * doses,
+    KH2PO4: once(PO4, F.KH2PO4) * doses,
+    MgSO4: once(Mg, F.MgSO4) * doses,
+    K2SO4: once(Kx, F.K2SO4) * doses,
+    CSM: once(Fe, feP / 100) * doses
+  };
+  // Potassium follows from the salts, forward-computed from one dose's grams.
+  const K = (g.KNO3 * F.KNO3_K + g.KH2PO4 * F.KH2PO4_K + g.K2SO4 * F.K2SO4) / doses * 1000 / L;
+  const conc = {}; // g per 100 mL of bottle, for solubility checks
+  for (const k in g) conc[k] = g[k] / bottleMl * 100;
+  return { g, conc, doses, daily: { NO3, PO4, K, Mg, Fe } };
+}
+
+const ceiling = (D, f) => ({ before: D / f, after: D * (1 - f) / f });
+
+function setRecipeTargets() {
+  $('tNO3').value = RECIPE_PPM.NO3.toPrecision(5);
+  $('tPO4').value = RECIPE_PPM.PO4.toPrecision(5);
+  $('tMg').value = RECIPE_PPM.Mg.toPrecision(5);
+  $('tK').value = '0';
+  $('tFe').value = RECIPE_PPM.Fe.toPrecision(5);
+}
+
+function render() {
+  const unit = $('volUnit').value;
+  const L = num('vol') * VOL[unit];
+  const f = num('wc') / 100;
+  const autoDose = L / VOL.usgal / 10; // 1 mL per 10 US gal
+  $('dose').placeholder = `auto: ${fmt(autoDose, 1)}`;
+  const doseMl = $('dose').value.trim() === '' ? autoDose : num('dose');
+  const inp = { L, bottleMl: num('bottle'), doseMl, NO3: num('tNO3'), PO4: num('tPO4'), Mg: num('tMg'), Kx: num('tK'), Fe: num('tFe'), feP: num('feP') };
+  $('wcEcho').textContent = fmt(num('wc'), 0);
+  $('err').textContent = ''; $('warn').textContent = '';
+  const bad = !(L > 0) ? 'Enter your water volume.'
+    : !(f > 0 && f <= 1) ? 'Water change must be between 1 and 100%.'
+    : !(inp.bottleMl > 0) ? 'Enter a bottle size.'
+    : !(doseMl > 0) ? 'Daily dose must be more than 0 mL.'
+    : doseMl > inp.bottleMl ? 'The daily dose is bigger than the bottle.'
+    : [inp.NO3, inp.PO4, inp.Mg, inp.Kx, inp.Fe].some(v => !(v >= 0)) ? 'Targets must be zero or more.'
+    : !(inp.feP > 0) ? 'Enter the iron % of your trace mix.' : '';
+  if (bad) { $('err').textContent = bad; ['mixTbl', 'ceilTbl'].forEach(id => $(id).innerHTML = ''); $('doseBig').textContent = '—'; $('doseSub').textContent = ''; return; }
+  store.set('volumeL', L.toFixed(2)); store.set('volUnit', unit);
+
+  const r = ppsPro(inp);
+  const rows = [
+    ['<strong>Macro bottle</strong>', null],
+    ['KNO3', 'KNO3'], ['KH2PO4', 'KH2PO4'], ['MgSO4·7H2O (Epsom salt)', 'MgSO4']
+  ];
+  if (inp.Kx > 0) rows.push(['K2SO4', 'K2SO4']);
+  rows.push(['<strong>Micro bottle</strong>', null], ['CSM+B', 'CSM']);
+  $('mixTbl').innerHTML = rows.map(([name, k]) => k === null
+    ? `<tr><td colspan="3">${name}</td></tr>`
+    : `<tr><td>${name}</td><td>${fmt(r.g[k], 2)} g</td><td>${fmt(r.conc[k], 1)}</td></tr>`).join('');
+
+  const warn = [];
+  for (const k in SOLUBILITY) {
+    if (!(r.g[k] > 0)) continue;
+    const use = r.conc[k] / SOLUBILITY[k];
+    if (use > 1) warn.push(`${k === 'MgSO4' ? 'MgSO4·7H2O' : k} won't dissolve at this strength (${fmt(use * 100, 0)}% of its limit) — use a bigger bottle or a larger daily dose.`);
+    else if (use > WARN_AT) warn.push(`${k === 'MgSO4' ? 'MgSO4·7H2O' : k} is at ${fmt(use * 100, 0)}% of its single-salt limit; mixed salts may not all dissolve, especially cold.`);
+  }
+  $('warn').textContent = warn.join(' ');
+
+  $('doseBig').textContent = `${fmt(doseMl, 1)} mL + ${fmt(doseMl, 1)} mL`;
+  $('doseSub').textContent = `Macro and micro, every day. Each bottle lasts ${fmt(Math.floor(r.doses), 0)} days.`;
+
+  const d = r.daily;
+  $('ceilTbl').innerHTML = [['NO3', d.NO3, 2], ['PO4', d.PO4, 3], ['K', d.K, 2], ['Mg', d.Mg, 3], ['Fe', d.Fe, 4]].map(([ion, day, p]) => {
+    const wk = 7 * day, c = ceiling(wk, f);
+    return `<tr><td>${ion}</td><td>${fmt(day, p)}</td><td>${fmt(wk, p)}</td><td>${fmt(c.before, p)}</td><td>${fmt(c.after, p)}</td></tr>`;
+  }).join('');
+}
+
+(function prefill() {
+  const L = parseFloat(store.get('volumeL')), u = store.get('volUnit');
+  if (u && VOL[u]) $('volUnit').value = u;
+  if (L > 0) $('vol').value = +(L / VOL[$('volUnit').value]).toFixed(1);
+  setRecipeTargets();
+})();
+// Keep the physical volume when switching units.
+let volPrev = $('volUnit').value;
+$('volUnit').addEventListener('change', e => {
+  const v = num('vol');
+  if (v > 0) $('vol').value = +(v * VOL[volPrev] / VOL[e.target.value]).toFixed(1);
+  volPrev = e.target.value;
+});
+$('reset').addEventListener('click', () => { setRecipeTargets(); render(); });
+$('f').addEventListener('input', render);
+$('f').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>

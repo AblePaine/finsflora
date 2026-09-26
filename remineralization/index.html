@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RO/DI Remineralization Calculator — FinsFlora</title>
+<meta name="description" content="Grams of CaSO4, MgSO4 and KHCO3 or NaHCO3 to bring RO/DI water to a target GH and KH, for your water-change volume.">
+<style>
+:root{--bg:#f7faf7;--card:#fff;--ink:#1a2e1a;--muted:#4f624f;--line:#d7e4d8;--accent:#2f6b3a;--accent-soft:#e3f1e5;--warn:#7a4f00;--warn-soft:#fff4dc;--bad:#9b2c2c;--bad-soft:#fde8e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--ink:#e3eee4;--muted:#9fb3a2;--line:#2a3a2e;--accent:#7cc48a;--accent-soft:#1e3324;--warn:#f0c46a;--warn-soft:#332a14;--bad:#f19a9a;--bad-soft:#3a1c1c}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 64px}
+header.site{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+header.site .brand{color:var(--ink);text-decoration:none;font-weight:700;font-size:1.1rem}
+header.site nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}
+header.site nav a{color:var(--muted);text-decoration:none}
+header.site nav a[aria-current]{color:var(--accent);font-weight:600}
+h1{font-size:1.75rem;line-height:1.2;margin:.2em 0 .4em}
+h2{font-size:1.1rem;margin:0 0 12px}
+.why{color:var(--muted);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:600px){.grid.g3{grid-template-columns:repeat(3,1fr)}.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.span2{grid-column:1/-1}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;min-width:0;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.inline{display:flex;gap:6px}.inline input{flex:1 1 0}.inline select{width:auto;flex:0 0 auto}
+@media(max-width:599px){.wide{grid-column:1/-1}}
+td.wrapcell{white-space:normal;text-align:left}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:.8rem;color:var(--muted);font-weight:600}
+tr.key td{font-weight:700;color:var(--accent)}
+.big{font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:.9rem}
+.msg{border-radius:8px;padding:10px 12px;margin:12px 0 0;font-size:.9rem}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg:empty{display:none}
+details{margin:16px 0}
+summary{cursor:pointer;font-weight:600}
+pre{background:var(--accent-soft);border-radius:8px;padding:12px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+.fn{font-size:.85rem;color:var(--muted);padding-left:1.2em}
+.fn li{margin-bottom:6px}
+sup a{text-decoration:none;color:var(--accent)}
+footer{margin-top:32px;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <a class="brand" href="../">FinsFlora</a>
+  <nav>
+    <a href="../tank-volume/">Volume</a>
+    <a href="../ei-dosing/">EI</a>
+    <a href="../pps-pro/">PPS-Pro</a>
+    <a href="../remineralization/" aria-current="page">Remineralize</a>
+    <a href="../co2/">CO2</a>
+  </nav>
+</header>
+
+<h1>RO/DI remineralization</h1>
+<p class="why">RO/DI water is close to empty: no calcium, no magnesium, no buffer. Plants need the first two and your pH needs the third. GH (calcium plus magnesium) and KH (carbonate buffer) are set separately, by separate salts, so you can hit each target exactly. Enter the water you're making and the hardness you want; this gives grams of each salt.</p>
+
+<form class="card" id="f" autocomplete="off" onsubmit="return false">
+  <h2>Water</h2>
+  <div class="grid">
+    <div class="wide"><label for="vol">Volume you're mixing</label>
+      <div class="inline"><input id="vol" type="number" inputmode="decimal" step="any" min="0" value="20">
+        <select id="volUnit" aria-label="Volume unit"><option value="L">L</option><option value="usgal">US gal</option><option value="ukgal">UK gal</option></select></div></div>
+    <div><label for="hu">Hardness unit</label>
+      <select id="hu"><option value="dh">°dGH / °dKH</option><option value="ppm">ppm as CaCO3</option></select></div>
+    <div><label for="gh">Target GH</label><input id="gh" type="number" inputmode="decimal" step="any" min="0" value="6"></div>
+    <div class="wide"><label for="kh">Target KH</label><input id="kh" type="number" inputmode="decimal" step="any" min="0" value="3"></div>
+    <div><label for="gh0">Source water GH</label><input id="gh0" type="number" inputmode="decimal" step="any" min="0" value="0"></div>
+    <div><label for="kh0">Source water KH</label><input id="kh0" type="number" inputmode="decimal" step="any" min="0" value="0"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Source water is 0 for fresh RO/DI. For a tap/RO blend, enter the blend's measured GH and KH.</p>
+  <h2 style="margin-top:20px">Salts</h2>
+  <div class="grid">
+    <div><label for="ratio">Ca : Mg by mass (x : 1)</label><input id="ratio" type="number" inputmode="decimal" step="any" min="0" value="3"></div>
+    <div><label for="ca">Calcium salt</label>
+      <select id="ca"><option value="CaSO4_2H2O">CaSO4·2H2O (gypsum)</option><option value="CaSO4">CaSO4, anhydrous</option></select></div>
+    <div><label for="mg">Magnesium salt</label>
+      <select id="mg"><option value="MgSO4_7H2O">MgSO4·7H2O (Epsom salt)</option><option value="MgSO4">MgSO4, anhydrous</option></select></div>
+    <div><label for="kb">KH salt</label>
+      <select id="kb"><option value="KHCO3">KHCO3 (potassium bicarbonate)</option><option value="NaHCO3">NaHCO3 (baking soda)</option></select></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Ratio: 3:1 to 4:1 is common hobby guidance, not settled science.<sup><a href="#n1">1</a></sup></p>
+</form>
+
+<section class="card" aria-live="polite">
+  <h2>Add to <span id="volEcho">20 L</span></h2>
+  <div class="msg bad" id="err"></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Salt</th><th>Grams</th><th>Raises</th></tr></thead>
+      <tbody id="saltTbl"></tbody>
+    </table>
+  </div>
+  <div class="msg warn" id="warn"></div>
+  <p class="sub" id="ratioNote" style="margin:10px 0 0"></p>
+</section>
+
+<section class="card">
+  <h2>What ends up in the water</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Ion added</th><th>mg/L</th><th>mmol/L</th></tr></thead>
+      <tbody id="ionTbl"></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin:10px 0 0">A TDS pen reads conductivity and converts it with its own factor, so its number won't match the mg/L total exactly.</p>
+</section>
+
+<details>
+  <summary>How this is calculated</summary>
+<pre>1 °dGH = 10 mg CaO/L = 10 ÷ 56.077 = 0.178326 mmol/L of Ca + Mg
+1 °dKH = the same in alkalinity   = 0.356652 mmol/L HCO3⁻ (bicarbonate is
+         monovalent, so twice the moles)
+1 °dH  = 17.848 ppm as CaCO3
+
+ΔGH = target − source,  ΔKH = target − source
+
+Split GH between Ca and Mg (r = Ca:Mg by mass):
+  molar ratio q = r × 24.305 ÷ 40.078
+  n_Mg = n_GH ÷ (1 + q),   n_Ca = n_GH − n_Mg      (mmol/L)
+
+grams = mmol/L × molar mass (g/mol) × litres ÷ 1000
+  CaSO4·2H2O 172.164   CaSO4 136.134
+  MgSO4·7H2O 246.466   MgSO4 120.361
+  KHCO3      100.114   NaHCO3 84.006
+
+CaSO4 and MgSO4 raise GH only; KHCO3 and NaHCO3 raise KH only.</pre>
+</details>
+
+<h2>Notes</h2>
+<ol class="fn">
+  <li id="n1"><strong>Ca:Mg ratio.</strong> There's no consensus optimum. 3:1 to 4:1 by mass is the usual planted-tank guidance; some shrimp keepers run lower. The molar ratio is shown too, because some sources quote it that way and the two differ by a factor of 1.65.</li>
+  <li id="n2"><strong>Gypsum dissolves slowly and not much of it.</strong> About 2.4 g per litre at 20 °C. Shake it into the full volume, not a small jug, and give it time; undissolved powder means GH comes in low.</li>
+  <li id="n3"><strong>Sulfate and sodium.</strong> An all-sulfate GH mix adds sulfate, and baking soda adds sodium. At normal targets both are modest; they're listed so you can see them, not because they're a problem.</li>
+  <li id="n4"><strong>Commercial GH boosters</strong> (mineral salts sold for shrimp or planted tanks) have their own formulas and often add potassium. This calculator is for the pure salts named above.</li>
+</ol>
+<footer>FinsFlora · planted tank science, minus the guesswork.</footer>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const fmt = (x, d = 2) => Number.isFinite(x) ? x.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+const VOL = { L: 1, usgal: 3.785411784, ukgal: 4.54609 }; // litres per unit, exact
+
+// Atomic masses, IUPAC conventional values (g/mol).
+const A = { K: 39.098, Na: 22.990, O: 15.999, H: 1.008, S: 32.06, Ca: 40.078, Mg: 24.305, C: 12.011 };
+const H2O = 2 * A.H + A.O;
+const SO4 = A.S + 4 * A.O;
+const HCO3 = A.H + A.C + 3 * A.O;
+const SALT = {
+  CaSO4_2H2O: { M: A.Ca + SO4 + 2 * H2O, name: 'CaSO4·2H2O' },   // 172.164
+  CaSO4:      { M: A.Ca + SO4,           name: 'CaSO4' },        // 136.134
+  MgSO4_7H2O: { M: A.Mg + SO4 + 7 * H2O, name: 'MgSO4·7H2O' },   // 246.466
+  MgSO4:      { M: A.Mg + SO4,           name: 'MgSO4' },        // 120.361
+  KHCO3:      { M: A.K + HCO3,           name: 'KHCO3', cation: 'K',  cM: A.K },   // 100.114
+  NaHCO3:     { M: A.Na + HCO3,          name: 'NaHCO3', cation: 'Na', cM: A.Na }  // 84.006
+};
+// 1 °dH is defined as 10 mg CaO per litre. GH counts divalent Ca/Mg mole-for-mole;
+// KH is expressed as the equivalent alkalinity, and HCO3⁻ carries one charge, so
+// 1 °dKH needs twice the moles of HCO3⁻.
+const MMOL_PER_DGH = 10 / (A.Ca + A.O);        // 0.178326 mmol/L
+const MMOL_HCO3_PER_DKH = 2 * MMOL_PER_DGH;    // 0.356652 mmol/L
+const PPM_CACO3_PER_DH = MMOL_PER_DGH * (A.Ca + A.C + 3 * A.O); // 17.848
+const GYPSUM_SOLUBILITY_G_L = 2.4;             // CaSO4·2H2O, 20 °C, approximate
+
+/**
+ * Pure engine. Hardness in °dH, volume in litres, ratio = Ca:Mg by mass.
+ * Ca and Mg split: Ca_mg = r·Mg_mg ⇒ 40.078·nCa = r·24.305·nMg ⇒ nCa = q·nMg with
+ * q = r·24.305/40.078; nCa + nMg = nGH ⇒ nMg = nGH/(1+q).
+ */
+function remin({ L, dGH, dKH, ratio, caSalt, mgSalt, khSalt }) {
+  const nGH = dGH * MMOL_PER_DGH;
+  const q = ratio * A.Mg / A.Ca;
+  const nMg = nGH / (1 + q);
+  const nCa = nGH - nMg;
+  const nHCO3 = dKH * MMOL_HCO3_PER_DKH;
+  const g = mmol => salt => mmol * SALT[salt].M * L / 1000;
+  const kh = SALT[khSalt];
+  return {
+    q, nCa, nMg, nHCO3,
+    grams: { ca: g(nCa)(caSalt), mg: g(nMg)(mgSalt), kh: g(nHCO3)(khSalt) },
+    ions: [ // [label, mg/L, mmol/L]
+      ['Ca', nCa * A.Ca, nCa],
+      ['Mg', nMg * A.Mg, nMg],
+      ['SO4', (nCa + nMg) * SO4, nCa + nMg],
+      [kh.cation, nHCO3 * kh.cM, nHCO3],
+      ['HCO3', nHCO3 * HCO3, nHCO3]
+    ]
+  };
+}
+
+function render() {
+  const unit = $('volUnit').value;
+  const L = num('vol') * VOL[unit];
+  const toDh = $('hu').value === 'ppm' ? 1 / PPM_CACO3_PER_DH : 1;
+  const tGH = num('gh') * toDh, tKH = num('kh') * toDh;
+  const sGH = (num('gh0') || 0) * toDh, sKH = (num('kh0') || 0) * toDh;
+  const ratio = num('ratio');
+  $('err').textContent = ''; $('warn').textContent = '';
+  const clear = () => { $('saltTbl').innerHTML = ''; $('ionTbl').innerHTML = ''; $('ratioNote').textContent = ''; };
+  const bad = !(L > 0) ? 'Enter the volume of water you are mixing.'
+    : !(tGH >= 0 && tKH >= 0) ? 'Enter target GH and KH.'
+    : !(ratio > 0) ? 'Ca:Mg ratio must be more than 0.' : '';
+  if (bad) { $('err').textContent = bad; clear(); return; }
+  $('volEcho').textContent = `${fmt(num('vol'), 1)} ${$('volUnit').selectedOptions[0].text}`;
+
+  const dGH = Math.max(0, tGH - sGH), dKH = Math.max(0, tKH - sKH);
+  const r = remin({ L, dGH, dKH, ratio, caSalt: $('ca').value, mgSalt: $('mg').value, khSalt: $('kb').value });
+  const u = $('hu').value === 'ppm' ? ' ppm' : '°';
+  const show = dh => $('hu').value === 'ppm' ? fmt(dh * PPM_CACO3_PER_DH, 0) : fmt(dh, 2);
+  const ghPart = n => `GH +${show(n / MMOL_PER_DGH)}${u}`;
+  $('saltTbl').innerHTML = [
+    [SALT[$('ca').value].name, r.grams.ca, ghPart(r.nCa)],
+    [SALT[$('mg').value].name, r.grams.mg, ghPart(r.nMg)],
+    [SALT[$('kb').value].name, r.grams.kh, `KH +${show(dKH)}${u}`]
+  ].map(([n, g, x]) => `<tr><td>${n}</td><td>${fmt(g, 2)} g</td><td>${x}</td></tr>`).join('');
+
+  const warn = [];
+  if (tGH < sGH) warn.push('Source GH is already above target — no salt can lower it; dilute with more RO/DI instead.');
+  if (tKH < sKH) warn.push('Source KH is already above target — dilute with more RO/DI instead.');
+  if (/^CaSO4/.test($('ca').value)) {
+    const gPerL = r.nCa * SALT.CaSO4_2H2O.M / 1000; // as dihydrate, which is what dissolves
+    if (gPerL > GYPSUM_SOLUBILITY_G_L) warn.push(`This needs ${fmt(gPerL, 2)} g/L of gypsum, above its ~2.4 g/L solubility — it won't all dissolve. Lower the GH target or raise the Mg share.`);
+    else if (gPerL > 2.0) warn.push(`Gypsum is near its solubility limit (${fmt(gPerL, 2)} of ~2.4 g/L). Expect slow dissolving.`);
+  }
+  $('warn').textContent = warn.join(' ');
+  $('ratioNote').textContent = `Ca:Mg ${fmt(ratio, 1)} : 1 by mass is ${fmt(r.q, 2)} : 1 by moles. Target ${show(tGH)}${u} GH / ${show(tKH)}${u} KH` +
+    (sGH || sKH ? `, of which ${show(dGH)}${u} / ${show(dKH)}${u} comes from these salts.` : '.');
+  const total = r.ions.reduce((s, i) => s + i[1], 0);
+  $('ionTbl').innerHTML = r.ions.map(([k, mg, mm]) => `<tr><td>${k}</td><td>${fmt(mg, 1)}</td><td>${fmt(mm, 3)}</td></tr>`).join('') +
+    `<tr class="key"><td>Total dissolved</td><td>${fmt(total, 1)}</td><td></td></tr>`;
+}
+
+// Keep the physical quantity when switching units.
+let volPrev = $('volUnit').value, huPrev = $('hu').value;
+$('volUnit').addEventListener('change', e => {
+  const v = num('vol');
+  if (v > 0) $('vol').value = +(v * VOL[volPrev] / VOL[e.target.value]).toFixed(1);
+  volPrev = e.target.value;
+});
+$('hu').addEventListener('change', e => {
+  const k = e.target.value === 'ppm' ? PPM_CACO3_PER_DH : 1 / PPM_CACO3_PER_DH;
+  const d = e.target.value === 'ppm' ? 1 : 2;
+  if (e.target.value !== huPrev) for (const id of ['gh', 'kh', 'gh0', 'kh0']) { const v = num(id); if (Number.isFinite(v)) $(id).value = +(v * k).toFixed(d); }
+  huPrev = e.target.value;
+});
+$('f').addEventListener('input', render);
+$('f').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
