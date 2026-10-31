@@ -1,4 +1,4 @@
-# FinsFlora engines — specification
+# DoseScape engines — specification
 
 Five calculators, one self-contained HTML page each (inline CSS + JS, no
 framework, no build step, no network requests). This file is the contract:
