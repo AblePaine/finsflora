@@ -1,6 +1,6 @@
 # DoseScape engines — specification
 
-Five calculators, one self-contained HTML page each (inline CSS + JS, no
+Six calculators, one self-contained HTML page each (inline CSS + JS, no
 framework, no build step, no network requests). This file is the contract:
 every formula here is implemented verbatim in the page's `<script>`, with the
 derivation repeated in code comments. Where the chemistry or the hobby data is
@@ -13,6 +13,7 @@ contested or unverified, it is marked **⚑ FLAG** here and footnoted on the pag
 | PPS-Pro dosing | `/pps-pro/` |
 | RO/DI remineralization | `/remineralization/` |
 | pH/KH → CO2 | `/co2/` |
+| Triangle balancer | `/triangle/` |
 
 The water-column volume from the tank page is saved in `localStorage`
 (`finsflora.volumeL`) and pre-fills the volume field on the EI and PPS-Pro pages (the remineralization
@@ -288,3 +289,152 @@ would lower it by 5–10 %). Both numbers are shown; neither is declared right.
 degassed CO2; the 3 ppm hobby convention is ~5× that. Indoor air is often
 600–1500 ppm CO2 and "degassed" samples are seldom fully equilibrated. Both
 are shown; the ratio (10^ΔpH) is robust regardless.
+
+---
+
+## 6. Triangle balancer (light–CO₂–nutrient coupling)
+
+**Posture.** Engines 1–5 compute chemistry: their constants are molar masses
+and equilibrium constants. This engine computes *balance*, and its constants
+are the hobby's working conventions (PAR bands, EI weekly ranges, the 3 ppm
+ambient convention §5 already prints). Every table below is a named constants
+table, every convention is ⚑-flagged here and footnoted on the page, and all
+of them live in one constants object (`TCONST`) at the top of the page's
+engine block, so the doctrine changes in exactly one place. What the engine
+guarantees is not that the bands are laws — it's that the *comparison*
+(required vs supplied, per corner, with the limiting corner named) is
+computed consistently and shown in full.
+
+**Scope.** Bands and sufficiency only: no dosing math (engines 2 and 3 own
+grams), and no bubble-rate output (diffuser, surface agitation and outgassing
+dominate it — no defensible constant exists). Volume is context and hand-off
+only; the page reads `finsflora.volumeL` and writes no storage keys.
+
+**Inputs:** PAR at substrate (µmol·m⁻²·s⁻¹) or a light class (Low ≈ 20 ·
+Medium ≈ 40 · High ≈ 80, nominal stand-ins ⚑); photoperiod (h/day,
+0 < h ≤ 24); CO₂ method (none / liquid carbon / DIY yeast / pressurized with
+a target ppm, default 30); plant density; livestock; nutrient regime (or a
+custom weekly NO₃).
+
+**Light — the driver corner:**
+
+```
+DLI_sub (mol·m⁻²·day⁻¹) = PAR × photoperiod_h × 0.0036     (3600 s/h ÷ 10⁶ µmol/mol)
+```
+
+| Band | PAR | Required CO₂ (ppm) | Required NO₃ (ppm/week, moderate density) |
+| --- | --- | --- | --- |
+| Low | < 25 | 3 (ambient — none required) | 5 |
+| Medium | 25 ≤ PAR < 50 | 20 | 12 |
+| High | 50 ≤ PAR ≤ 100 | 30 | 22.5 |
+| Very high | > 100 | 30 — capped | 22.5 — capped |
+
+Banding is on PAR (intensity), not DLI — hobby CO₂ guidance keys on
+intensity; photoperiod enters via DLI (displayed) and flag R3. Required
+PO₄/K/Fe are derived from required NO₃ at §2's EI weekly proportions,
+carried as the fractions 3.9/22.5, 26/22.5, 0.30/22.5 so the round-trip to
+§2's printed week is exact.
+
+**CO₂ — supplied vs required:**
+
+| Method | Supplied ppm | Stability | Note |
+| --- | --- | --- | --- |
+| None | 3 | 1.0 | The ambient-equilibrium convention of §5, Mode B |
+| Liquid carbon | 10 | 0.85 | ⚑ modelling credit — glutaraldehyde is not CO₂ |
+| DIY yeast | 20 | 0.6 | ⚑ stability models output sag/swing |
+| Pressurized | user's target | 1.0 | Solenoid-on-timer assumed |
+
+Livestock cap: hardy/none 35 ppm; shrimp or sensitive 25 ppm. A pressurized
+target above the cap is scored at the cap, with a warning.
+
+```
+s_co2 = min(1, supplied_capped / required) × stability
+```
+
+**Nutrients — supplied vs required.** Required NO₃ = band figure × density
+multiplier (sparse 0.7 · moderate 1.0 · dense 1.3 ⚑). Supplied weekly ppm:
+
+| Regime | NO₃ | PO₄ | K | Fe | Source |
+| --- | --- | --- | --- | --- | --- |
+| EI | 22.5 | 3.9 | 26 | 0.30 | §2's printed week |
+| PPS-Pro | 13.153 | 1.029 | 8.722 | 0.1932 | §3 daily targets × 7 |
+| Lean bottled | 7.5 | — | — | — | ⚑ nominal label-dose figure |
+| Root tabs only | 2 | — | — | — | ⚑ nominal water-column credit |
+| None | 0 | 0 | 0 | 0 | Livestock waste real but unquantified — stated, not modelled |
+| Custom | user's NO₃ | ×3.9/22.5 | ×26/22.5 | ×0.30/22.5 | EI-ratio derivation |
+
+```
+s_nut = min(1, supplied_NO3 / required_NO3)
+```
+
+Sufficiency is judged on NO₃ as the proxy ion (stated on the page); the
+supplied/required table displays all four ions where the regime defines them.
+
+**Verdict.** Limiting corner = min(s_co2, s_nut); both ≥ 0.9 → **In
+balance**. The verdict names the limiter and its percentage, never a bare
+score.
+
+**Triangle (visual + barycentric position).** Corners: Light (0.5, √3/2) ·
+CO₂ (0, 0) · Nutrients (1, 0). Intensities, each capped at 1:
+
+```
+iL = min(1, PAR / 100)   iC = min(1, co2_supplied_capped / 30)   iN = min(1, no3_supplied / 22.5)
+w_i = i_i / (iL + iC + iN)          P = wL·Light + wC·CO₂ + wN·Nutrients
+```
+
+If the intensities sum to 0, no point is plotted. The plot is a *position*
+visual; the verdict is computed from the sufficiencies, not from the plot,
+and the page says so.
+
+**Algae-risk flags (deterministic; every flag prints its reason):**
+
+| Rule | Fires when | Level |
+| --- | --- | --- |
+| R1 | band ≥ High AND s_co2 < 0.70 | High — "the classic BBA setup: full fertilizer, high light, no carbon" |
+| R2 | band ≥ High AND s_nut < 0.60 | High — deficiency symptoms and algae pressure together |
+| R3 | photoperiod > 10 h | Watch — algae get hours the plants can't use |
+| R4 | s_co2 < 0.85 or s_nut < 0.85 (and no High fired) | Watch — names the corner under 85% |
+| R5 | supplied NO₃ > 1.5 × required AND band ≤ Medium | Note (not risk) — EI doctrine: excess alone doesn't grow algae, but it's waste ⚑ |
+
+Overall risk = worst fired (High > Watch > none). No flag → "No imbalance
+flags at these settings."
+
+**"Change one lever" — the ordered fix list (deterministic):**
+
+1. s_co2 < s_nut and s_co2 < 0.9 → the CO₂ lever (method-aware wording: DIY
+   shortfall is a *stability* problem, not an amount problem). If the method
+   can't reach the requirement, print the equivalent light-side move: the
+   PAR ceiling of the highest band whose required CO₂ ≤ supplied
+   (e.g. supplied 3 ppm → stay under PAR 25).
+2. Else s_nut < 0.9 → the nutrient lever: step the regime up one rung
+   (none → root tabs → lean → PPS-Pro → EI) or set custom NO₃ to the
+   required figure; engines 2/3 do the grams.
+3. Else photoperiod > 10 h → the light-duration lever (cut to 8–10 h).
+4. Else → "No lever to pull — hold settings and observe."
+
+Special case: if required CO₂ > livestock cap, the CO₂ lever is replaced by
+the **light lever** (bring PAR under the top of the highest band whose
+requirement fits under the cap).
+
+**Display.** Internal math unrounded. Sufficiency as whole %; ppm to 1
+decimal (Fe 2); DLI to 2 decimals; triangle coordinates not displayed.
+
+⚑ FLAG — *Band edges and required-CO₂ figures* are hobby convention (the
+ranges EI/PPS practice is built around), not measured optima. PAR at the
+substrate is itself usually estimated; the page shows the band the tank
+falls in, not a false-precision point.
+⚑ FLAG — *Liquid-carbon credit.* Glutaraldehyde delivers no measurable CO₂
+ppm; 10 ppm is a modelling credit for its real but partial effect — the
+softest number in this engine.
+⚑ FLAG — *Stability factors* (DIY 0.6, liquid 0.85) are conventions
+modelling output sag and swing, not measurements of any particular rig.
+⚑ FLAG — *Density multipliers* are a heuristic: plant mass is the nutrient
+sink, but light alone doesn't set uptake.
+⚑ FLAG — *Nominal regime figures.* Lean-bottled 7.5 and root-tab 2 ppm have
+no repo constant behind them; they are label-dose and water-column-credit
+stand-ins, marked as such on the page.
+⚑ FLAG — *Livestock caps* (35/25 ppm) are hobby safety convention, not
+toxicology.
+⚑ FLAG — *Requirement caps.* Past ~30 ppm CO₂ and the top of the §2 EI
+weekly range, more input stops being the answer — the excess is in the
+light, and the lever list says so.

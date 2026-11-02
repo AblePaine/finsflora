@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triangle Balancer — DoseScape</title>
+<meta name="description" content="Light, CO2 and nutrients checked against each other: what your PAR level requires, what your setup supplies, which corner is limiting, and which lever to move first.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://dosescape.com/triangle/">
+<meta property="og:site_name" content="DoseScape">
+<meta property="og:title" content="Triangle Balancer — DoseScape">
+<meta property="og:description" content="Light, CO2 and nutrients checked against each other: what your PAR level requires, what your setup supplies, which corner is limiting, and which lever to move first.">
+<meta property="og:url" content="https://dosescape.com/triangle/">
+<meta property="og:type" content="website">
+<style>
+:root{--bg:#f7faf7;--card:#fff;--ink:#1a2e1a;--muted:#4f624f;--line:#d7e4d8;--accent:#2f6b3a;--accent-soft:#e3f1e5;--warn:#7a4f00;--warn-soft:#fff4dc;--bad:#9b2c2c;--bad-soft:#fde8e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--ink:#e3eee4;--muted:#9fb3a2;--line:#2a3a2e;--accent:#7cc48a;--accent-soft:#1e3324;--warn:#f0c46a;--warn-soft:#332a14;--bad:#f19a9a;--bad-soft:#3a1c1c}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 64px}
+header.site{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+header.site .brand{color:var(--ink);text-decoration:none;font-weight:700;font-size:1.1rem}
+header.site nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}
+header.site nav a{color:var(--muted);text-decoration:none}
+header.site nav a[aria-current]{color:var(--accent);font-weight:600}
+h1{font-size:1.75rem;line-height:1.2;margin:.2em 0 .4em}
+h2{font-size:1.1rem;margin:0 0 12px}
+.why{color:var(--muted);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:600px){.grid.g3{grid-template-columns:repeat(3,1fr)}.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.span2{grid-column:1/-1}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;min-width:0;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.inline{display:flex;gap:6px}.inline input{flex:1 1 0}.inline select{width:auto;flex:0 0 auto}
+@media(max-width:599px){.wide{grid-column:1/-1}}
+td.wrapcell{white-space:normal;text-align:left}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:.8rem;color:var(--muted);font-weight:600}
+tr.key td{font-weight:700;color:var(--accent)}
+.big{font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--accent);font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:.9rem}
+.msg{border-radius:8px;padding:10px 12px;margin:12px 0 0;font-size:.9rem}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg.note{background:var(--accent-soft);color:var(--ink)}
+.msg:empty{display:none}
+.verdict{font-size:1.12rem;font-weight:600;margin:0 0 6px}
+.tri{display:block;margin:6px auto;max-width:320px;width:100%}
+.tri polygon{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.tri circle{fill:var(--bad);stroke:var(--card);stroke-width:1.5}
+.tri text{font-size:11px;fill:var(--muted)}
+details{margin:16px 0}
+summary{cursor:pointer;font-weight:600}
+pre{background:var(--accent-soft);border-radius:8px;padding:12px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+.fn{font-size:.85rem;color:var(--muted);padding-left:1.2em}
+.fn li{margin-bottom:6px}
+sup a{text-decoration:none;color:var(--accent)}
+footer{margin-top:32px;font-size:.8rem;color:var(--muted)}
+</style>
+<script defer src="https://umami.epoxybench.com/script.js" data-website-id="282ca634-aa86-466c-851a-e512c2e79a91"></script>
+</head>
+<body>
+<div class="wrap">
+<header class="site">
+  <a class="brand" href="../">DoseScape</a>
+  <nav>
+    <a href="../tank-volume/">Volume</a>
+    <a href="../ei-dosing/">EI</a>
+    <a href="../pps-pro/">PPS-Pro</a>
+    <a href="../remineralization/">Remineralize</a>
+    <a href="../co2/">CO2</a>
+    <a href="../triangle/" aria-current="page">Triangle</a>
+  </nav>
+</header>
+
+<h1>Triangle balancer</h1>
+<p class="why">Most pages treat light, CO₂ and fertilizer as three separate questions. They are one question: light sets the demand, and the other two corners either meet it or they don't. Describe your light, your CO₂ method and your dosing regime; this works out what the light level requires, what your setup actually supplies, which corner is holding the tank back, and which lever to move first. It works in ppm bands and sufficiency — deliberately no grams here; the <a href="../ei-dosing/" style="color:var(--accent)">EI</a> and <a href="../pps-pro/" style="color:var(--accent)">PPS-Pro</a> pages do the dosing.</p>
+
+<form class="card" id="f" autocomplete="off" onsubmit="return false">
+  <h2>Tank</h2>
+  <div class="grid">
+    <div class="wide"><label for="vol">Water volume <a href="../tank-volume/" style="color:var(--accent)">(calculate)</a></label>
+      <div class="inline"><input id="vol" type="number" inputmode="decimal" step="any" min="0" value="75.7">
+        <select id="volUnit" aria-label="Volume unit"><option value="L">L</option><option value="usgal">US gal</option><option value="ukgal">UK gal</option></select></div>
+      <p class="sub" style="margin:6px 0 0">Context for the hand-offs — no answer on this page scales with volume, because nothing here is a dose.</p></div>
+  </div>
+  <h2 style="margin-top:20px">Light — the driver corner</h2>
+  <div class="grid">
+    <div><label for="par">PAR at the substrate (µmol·m⁻²·s⁻¹)</label><input id="par" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g. 60"></div>
+    <div><label for="parClass">…or pick a light class</label>
+      <select id="parClass"><option value="">—</option><option value="low">Low ≈ 20</option><option value="medium">Medium ≈ 40</option><option value="high">High ≈ 80</option></select></div>
+    <div><label for="photo">Photoperiod (hours/day)</label><input id="photo" type="number" inputmode="decimal" step="any" min="0" max="24" value="8"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Class figures are nominal stand-ins, not measurements of your fixture.<sup><a href="#n2">2</a></sup> If you enter a PAR number it wins over the class.</p>
+  <h2 style="margin-top:20px">CO₂</h2>
+  <div class="grid">
+    <div><label for="co2Method">CO₂ method</label>
+      <select id="co2Method"><option value="none">None</option><option value="liquid">Liquid carbon (glutaraldehyde)</option><option value="diy">DIY yeast</option><option value="pressurized">Pressurized</option></select></div>
+    <div id="co2TargetRow" style="display:none"><label for="co2Target">Target CO₂ (ppm)</label><input id="co2Target" type="number" inputmode="decimal" step="any" min="0" value="30"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">No injection still leaves ~3 ppm from the air — the same convention the CO₂ page prints.<sup><a href="#n3">3</a></sup> Liquid carbon gets a nominal credit, but it is not CO₂.<sup><a href="#n4">4</a></sup> Pressurized targets are held against a livestock safety cap.<sup><a href="#n6">6</a></sup></p>
+  <h2 style="margin-top:20px">Plants &amp; livestock</h2>
+  <div class="grid">
+    <div><label for="density">Plant density</label>
+      <select id="density"><option value="sparse">Sparse</option><option value="moderate" selected>Moderate</option><option value="dense">Dense</option></select></div>
+    <div><label for="stock">Livestock</label>
+      <select id="stock"><option value="hardy" selected>None / hardy fish</option><option value="shrimp">Shrimp or sensitive</option></select></div>
+  </div>
+  <h2 style="margin-top:20px">Nutrients</h2>
+  <div class="grid">
+    <div><label for="regime">Dosing regime</label>
+      <select id="regime"><option value="none">None</option><option value="roottabs">Root tabs only</option><option value="lean">Lean bottled</option><option value="ppspro">PPS-Pro</option><option value="ei" selected>EI</option><option value="custom">Custom</option></select></div>
+    <div id="customRow" style="display:none"><label for="customNO3">Your weekly NO₃ (ppm)</label><input id="customNO3" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g. 15"></div>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Supplied figures for EI and PPS-Pro come from those engines' own SPEC sections. Lean-bottled and root-tab figures are nominal; livestock waste is real but uncounted.<sup><a href="#n8">8</a></sup></p>
+</form>
+
+<section class="card" aria-live="polite">
+  <h2>The balance</h2>
+  <div class="msg bad" id="err"></div>
+  <p class="verdict" id="verdict"></p>
+  <p class="sub" id="bandLine" style="margin:0 0 6px"></p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th></th><th>Required</th><th>Supplied</th><th>Sufficiency</th></tr></thead>
+      <tbody id="bandTbl"></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin:10px 0 0">Sufficiency is judged on NO₃ as the proxy ion; the other rows show the full band the regime defines. Nutrient figures are ppm per week.</p>
+  <div id="triSvg"></div>
+  <p class="sub" id="triNote" style="margin:6px 0 0"></p>
+</section>
+
+<section class="card">
+  <h2>Algae-risk flags</h2>
+  <div id="flags"></div>
+</section>
+
+<section class="card">
+  <h2>Change one lever</h2>
+  <p id="leverText" style="margin:0"></p>
+  <p id="leverLinks" style="margin:8px 0 0"></p>
+</section>
+
+<details>
+  <summary>How this is calculated</summary>
+<pre>Light is the driver. Daily light integral at the substrate:
+  DLI (mol·m⁻²·day⁻¹) = PAR × photoperiod_h × 0.0036     (3600 s/h ÷ 10⁶ µmol/mol)
+
+PAR band → what the light requires (conventions, SPEC §6 — not chemistry):
+  Low       PAR &lt; 25        CO2 3 ppm    NO3 5 ppm/week
+  Medium    25 ≤ PAR &lt; 50    CO2 20 ppm   NO3 12 ppm/week
+  High      50 ≤ PAR ≤ 100   CO2 30 ppm   NO3 22.5 ppm/week
+  Very high PAR &gt; 100       CO2 30 ppm   NO3 22.5 ppm/week   (capped — note 9)
+  Required NO3 × density (sparse 0.7 · moderate 1.0 · dense 1.3)
+  Required PO4 = NO3 × 3.9/22.5 · K = NO3 × 26/22.5 · Fe = NO3 × 0.30/22.5
+  (the EI weekly proportions of SPEC §2)
+
+Sufficiency, per corner:
+  s_co2 = min(1, supplied_CO2 ÷ required_CO2) × stability
+  s_nut = min(1, supplied_NO3 ÷ required_NO3)
+  Limiting corner = the smaller; both ≥ 0.9 → in balance.
+
+Supplied CO2: none 3 ppm · liquid carbon 10 (credit) · DIY yeast 20 × 0.6
+stability · pressurized = your target, held at the livestock cap
+(hardy 35 ppm · shrimp/sensitive 25 ppm).
+
+Triangle position (a visual, not the calculation):
+  iL = min(1, PAR/100) · iC = min(1, CO2_supplied/30) · iN = min(1, NO3_supplied/22.5)
+  weights w = i ÷ (iL + iC + iN); point = wL·(0.5, √3/2) + wC·(0, 0) + wN·(1, 0)</pre>
+</details>
+
+<h2>Notes</h2>
+<ol class="fn">
+  <li id="n1"><strong>The bands are conventions, not constants of nature.</strong> Band edges, required-CO₂ figures and required nutrient bands are the hobby's working conventions — the ranges EI and PPS practice is built around — not measured optima, and PAR at the substrate is itself usually estimated. This page's promise is narrower than the other engines': the <em>comparison</em> (required vs supplied, per corner) is computed consistently and shown in full. Every figure is tabled in SPEC §6 so it can be argued with in one place.</li>
+  <li id="n2"><strong>Light-class PAR figures are stand-ins.</strong> Low ≈ 20, Medium ≈ 40, High ≈ 80 µmol·m⁻²·s⁻¹ are nominal midpoints for unmeasured fixtures, not data about yours. A measured PAR (or a manufacturer's PAR map for your fixture at your height) beats the class every time.</li>
+  <li id="n3"><strong>The 3 ppm ambient figure is a convention.</strong> Water in equilibrium with room air holds CO₂ by Henry's law — about 0.6 ppm at 420 ppm air, as the <a href="../co2/" style="color:var(--accent)">CO₂ page</a> shows — but real tanks sit higher (respiration, imperfect equilibration), and the hobby's working figure is 3 ppm. The same convention is used there and here so the two pages agree.</li>
+  <li id="n4"><strong>Liquid carbon is not CO₂.</strong> Glutaraldehyde products deliver no measurable CO₂ ppm; their effect on growth is real but partial and works by another route. The 10 ppm "supply" here is a modelling credit for that effect — the softest number on this page — not a measurement.</li>
+  <li id="n5"><strong>Stability factors are conventions.</strong> DIY yeast is credited at 60% because output sags and swings with temperature and bottle age; liquid carbon at 85%. A pressurized rig on a solenoid is treated as steady. These factors model the swing, not the average.</li>
+  <li id="n6"><strong>Livestock caps are safety convention, not toxicology.</strong> 35 ppm for none/hardy fish, 25 ppm where shrimp or sensitive stock are kept. If your target sits above the cap, sufficiency is scored at the cap and the page says so. Related convention: on a timer, CO₂ starts about an hour before lights-on so the level is there when the photoperiod starts.</li>
+  <li id="n7"><strong>Density multipliers are a heuristic.</strong> Sparse 0.7 · moderate 1.0 · dense 1.3 scales the nutrient requirement only — plant mass is the nutrient sink, but light alone doesn't set uptake, and no multiplier here pretends to measure your planting.</li>
+  <li id="n8"><strong>Nominal regime figures.</strong> Lean bottled (7.5 ppm NO₃/week) is a label-dose stand-in and root tabs (2 ppm) a small water-column credit — tabs feed roots, not the column — because no better source figure exists. EI and PPS-Pro figures are exact from their own pages. "None" counts livestock waste as zero: it is real, and unquantified, so it is stated rather than modelled.</li>
+  <li id="n9"><strong>The requirement caps are doctrine.</strong> Past ~30 ppm CO₂ and the top of the EI weekly range, more input stops being the answer — the excess is in the light, and the lever list will say so rather than ask for a 40 ppm target.</li>
+  <li id="n10"><strong>Excess fertilizer and algae.</strong> The oversupply note follows EI doctrine: excess fertilizer alone doesn't grow algae. It is doctrine, printed as doctrine — the flag calls it waste, not a cause.</li>
+  <li id="n11"><strong>The plot is a position, not the calculation.</strong> The triangle shows where the tank sits among the three corners, from capped intensities. The verdict is computed from the sufficiencies above it, not read off the plot.</li>
+</ol>
+<footer>DoseScape · planted tank science, minus the guesswork.</footer>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const fmt = (x, d = 2) => Number.isFinite(x) ? x.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+const store = {
+  get(k) { try { return localStorage.getItem('finsflora.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('finsflora.' + k, v); } catch (e) { /* storage unavailable */ } }
+};
+const VOL = { L: 1, usgal: 3.785411784, ukgal: 4.54609 }; // litres per unit, exact
+
+/* === TRIANGLE ENGINE (pure) === */
+// Triangle balancer — pure engine. No DOM, no storage: inputs in, analysis
+// out. Every constant below is a hobby working convention, not chemistry —
+// see SPEC §6; the ⚑ flags are repeated in the page footnotes. The doctrine
+// lives in TCONST and nowhere else: change a number there, nowhere else.
+
+const TCONST = {
+  // Light bands on PAR at the substrate (µmol·m⁻²·s⁻¹). Banding is on
+  // intensity, not DLI; photoperiod enters via DLI and flag R3. ⚑ convention.
+  BANDS: [
+    { key: 'low', label: 'Low', reqCO2: 3, reqNO3: 5 },
+    { key: 'medium', label: 'Medium', reqCO2: 20, reqNO3: 12 },
+    { key: 'high', label: 'High', reqCO2: 30, reqNO3: 22.5 },
+    { key: 'veryhigh', label: 'Very high', reqCO2: 30, reqNO3: 22.5 } // capped: past this the excess is in the light
+  ],
+  // Top PAR edge per band index (the lever math quotes these ceilings).
+  BAND_CEIL: [25, 50, 100, null],
+  // Nominal PAR stand-ins when a class is picked instead of a number. ⚑
+  CLASS_PAR: { low: 20, medium: 40, high: 80 },
+  // Supplied CO2 (ppm during the photoperiod) and stability, by method.
+  // 'pressurized' takes the user's target instead of a table figure.
+  CO2_METHODS: {
+    none: { label: 'None', ppm: 3, stability: 1 },                  // ambient convention, as SPEC §5
+    liquid: { label: 'Liquid carbon', ppm: 10, stability: 0.85 },   // ⚑ modelling credit — not CO2
+    diy: { label: 'DIY yeast', ppm: 20, stability: 0.6 },           // ⚑ stability models the sag/swing
+    pressurized: { label: 'Pressurized', ppm: null, stability: 1 }
+  },
+  // Livestock safety caps on CO2 (ppm). ⚑ safety convention, not toxicology.
+  CAPS: { hardy: 35, shrimp: 25 },
+  // Plant-density multiplier on the nutrient requirement only. ⚑ heuristic.
+  DENSITY: { sparse: 0.7, moderate: 1, dense: 1.3 },
+  // Required PO4/K/Fe derive from required NO3 at the SPEC §2 EI weekly
+  // proportions (22.5 NO3 · 3.9 PO4 · 26 K · 0.30 Fe). Carried as the §2
+  // fractions so the round-trip to §2's printed week is exact.
+  EI_RATIOS: { po4: 3.9 / 22.5, k: 26 / 22.5, fe: 0.3 / 22.5 },
+  // Supplied weekly ppm by regime. EI = SPEC §2's printed week; PPS-Pro =
+  // SPEC §3's daily targets × 7. null = the regime doesn't define that ion.
+  REGIMES: {
+    none: { label: 'None', no3: 0, po4: 0, k: 0, fe: 0 },
+    roottabs: { label: 'Root tabs only', no3: 2, po4: null, k: null, fe: null },  // ⚑ nominal column credit
+    lean: { label: 'Lean bottled', no3: 7.5, po4: null, k: null, fe: null },     // ⚑ nominal label dose
+    ppspro: { label: 'PPS-Pro', no3: 1.879 * 7, po4: 0.147 * 7, k: 1.246 * 7, fe: 0.0276 * 7 },
+    ei: { label: 'EI', no3: 22.5, po4: 3.9, k: 26, fe: 0.3 },
+    custom: { label: 'Custom', no3: null, po4: null, k: null, fe: null } // NO3 = user's; rest derived by EI ratios
+  },
+  // Regime ladder for the "step up one rung" lever (custom sits off-ladder).
+  LADDER: ['none', 'roottabs', 'lean', 'ppspro', 'ei']
+};
+
+/** Light band for a PAR value: <25 Low, <50 Medium, ≤100 High, above Very high. */
+function bandForPAR(par) {
+  if (par < 25) return TCONST.BANDS[0];
+  if (par < 50) return TCONST.BANDS[1];
+  if (par <= 100) return TCONST.BANDS[2];
+  return TCONST.BANDS[3];
+}
+
+/**
+ * Barycentric position from the three intensities (each already capped at 1).
+ * Corners: Light (0.5, √3/2) · CO2 (0, 0) · Nutrients (1, 0). Returns the
+ * weights and the point, or null when the intensities sum to zero.
+ */
+function trianglePoint(iL, iC, iN) {
+  const sum = iL + iC + iN;
+  if (!(sum > 0)) return null;
+  const wL = iL / sum, wC = iC / sum, wN = iN / sum;
+  return { weights: { light: wL, co2: wC, nutrients: wN }, x: wL * 0.5 + wN, y: wL * (Math.sqrt(3) / 2) };
+}
+
+/** One-decimal display formatting for numbers embedded in lever text. */
+const n1 = x => String(Math.round(x * 10) / 10);
+
+/**
+ * The coupled balance. inp: { par (number|null), parClass, hours, co2Method,
+ * co2Target, density, livestock, regime, customNO3 }. Returns a state object:
+ * 'error' (bad input, message only), 'insufficient' (no PAR and no class —
+ * nothing can be required or supplied against an unknown driver), or 'ok'
+ * with the full analysis. Internal math unrounded.
+ */
+function triangleBalance(inp) {
+  const C = TCONST;
+  // -- validation: one clear error, no partial verdict (house pattern) --
+  if (!(inp.hours > 0 && inp.hours <= 24))
+    return { state: 'error', error: 'Photoperiod must be more than 0 and no more than 24 hours.' };
+  const method = C.CO2_METHODS[inp.co2Method];
+  if (!method) return { state: 'error', error: 'Pick a CO₂ method.' };
+  if (inp.co2Method === 'pressurized' && !(inp.co2Target > 0))
+    return { state: 'error', error: 'Enter the CO₂ level you target (ppm).' };
+  const regimeDef = C.REGIMES[inp.regime];
+  if (!regimeDef) return { state: 'error', error: 'Pick a nutrient regime.' };
+  if (inp.regime === 'custom' && !(inp.customNO3 >= 0))
+    return { state: 'error', error: 'Enter your custom weekly NO₃ (ppm).' };
+  const dens = C.DENSITY[inp.density];
+  if (!(dens > 0)) return { state: 'error', error: 'Pick a plant density.' };
+  const cap = C.CAPS[inp.livestock];
+  if (!(cap > 0)) return { state: 'error', error: 'Pick a livestock setting.' };
+
+  // -- light, the driver corner: an entered PAR wins over the class figure --
+  let par = null, parSource = null;
+  if (inp.par != null && Number.isFinite(inp.par)) {
+    if (!(inp.par > 0)) return { state: 'error', error: 'PAR must be above zero — or clear it and pick a light class.' };
+    par = inp.par; parSource = 'entered';
+  } else if (inp.parClass && C.CLASS_PAR[inp.parClass]) {
+    par = C.CLASS_PAR[inp.parClass]; parSource = 'class';
+  }
+  if (par == null)
+    return { state: 'insufficient', point: null, message: 'Enter a PAR value or pick a light class — light sets what the other two corners must supply, so nothing can be scored until it is known.' };
+
+  const band = bandForPAR(par);
+  const bandIdx = C.BANDS.indexOf(band);
+  const dli = par * inp.hours * 0.0036; // mol·m⁻²·day⁻¹ (3600 s/h ÷ 10⁶ µmol/mol)
+
+  // -- requirements: CO2 straight from the band; NO3 scaled by density;
+  //    PO4/K/Fe derived from required NO3 at the EI proportions --
+  const reqCO2 = band.reqCO2;
+  const reqNO3 = band.reqNO3 * dens;
+  const required = {
+    co2: reqCO2, no3: reqNO3,
+    po4: reqNO3 * C.EI_RATIOS.po4, k: reqNO3 * C.EI_RATIOS.k, fe: reqNO3 * C.EI_RATIOS.fe
+  };
+
+  // -- supplied CO2: method figure or user target, held at the livestock cap --
+  const rawCO2 = inp.co2Method === 'pressurized' ? inp.co2Target : method.ppm;
+  const supCO2 = Math.min(rawCO2, cap);
+  const capWarning = rawCO2 > cap;
+  const sCo2 = Math.min(1, supCO2 / reqCO2) * method.stability;
+
+  // -- supplied nutrients: regime table, or the user's NO3 with EI-derived rest --
+  let sup = { no3: regimeDef.no3, po4: regimeDef.po4, k: regimeDef.k, fe: regimeDef.fe };
+  if (inp.regime === 'custom') {
+    sup = {
+      no3: inp.customNO3,
+      po4: inp.customNO3 * C.EI_RATIOS.po4, k: inp.customNO3 * C.EI_RATIOS.k, fe: inp.customNO3 * C.EI_RATIOS.fe
+    };
+  }
+  const sNut = Math.min(1, sup.no3 / reqNO3);
+
+  // -- verdict: the limiting corner, named with its percentage --
+  const inBalance = sCo2 >= 0.9 && sNut >= 0.9;
+  const limiting = inBalance ? null : (sCo2 <= sNut ? 'co2' : 'nutrients');
+  const limPct = Math.round(Math.min(sCo2, sNut) * 100);
+  const verdict = inBalance
+    ? 'In balance — both corners supply at least 90% of what this light level asks for.'
+    : (limiting === 'co2'
+      ? `CO₂ is the limiting corner at ${limPct}% of what this light level asks for.`
+      : `Nutrients are the limiting corner at ${limPct}% of what this light level asks for.`);
+
+  // -- algae-risk flags: deterministic, every flag carries its reason (SPEC §6) --
+  const flags = [];
+  if (bandIdx >= 2 && sCo2 < 0.7)
+    flags.push({ rule: 'R1', level: 'high', text: 'CO₂ well under light demand. This is the classic BBA setup: full fertilizer, high light, no carbon.' });
+  if (bandIdx >= 2 && sNut < 0.6)
+    flags.push({ rule: 'R2', level: 'high', text: 'Nutrients well under light demand: deficiency symptoms and algae pressure together.' });
+  if (inp.hours > 10)
+    flags.push({ rule: 'R3', level: 'watch', text: 'Photoperiod over 10 h: algae get hours the plants can\'t use once CO₂/nutrients cap growth.' });
+  if (!flags.some(f => f.level === 'high') && (sCo2 < 0.85 || sNut < 0.85)) {
+    const parts = [];
+    if (sCo2 < 0.85) parts.push(`CO₂ at ${Math.round(sCo2 * 100)}%`);
+    if (sNut < 0.85) parts.push(`nutrients at ${Math.round(sNut * 100)}%`);
+    flags.push({ rule: 'R4', level: 'watch', text: `${parts.join(' and ')} of what this light level asks for — below the 85% sufficiency line.` });
+  }
+  if (sup.no3 > 1.5 * reqNO3 && bandIdx <= 1)
+    flags.push({ rule: 'R5', level: 'note', text: 'Dosing well above this light level. Per EI doctrine, excess fertilizer alone doesn\'t grow algae — but it\'s waste, and the water changes carry it.' });
+  const risk = flags.some(f => f.level === 'high') ? 'high' : flags.some(f => f.level === 'watch') ? 'watch' : 'none';
+
+  // -- "change one lever": the ordered, deterministic fix list --
+  // Highest band whose CO2 requirement a given supply meets → its PAR ceiling.
+  const ceilingFor = ppm => {
+    let idx = 0;
+    C.BANDS.forEach((b, i) => { if (b.reqCO2 <= ppm) idx = i; });
+    return C.BAND_CEIL[idx];
+  };
+  const co2Links = [{ href: '../co2/', text: 'Verify CO₂ on the pH/KH page' }];
+  let lever;
+  if (sCo2 < 0.9 && sCo2 < sNut) {
+    if (reqCO2 > cap) {
+      // The CO2 lever is legally closed by the livestock cap — light moves instead.
+      let tgt = 0;
+      C.BANDS.forEach((b, i) => { if (b.reqCO2 <= cap) tgt = i; });
+      lever = { kind: 'light', text: `CO₂ can't rise past your livestock cap of ${cap} ppm, and this light level asks for ${reqCO2} ppm — so light is the lever: bring PAR under ${C.BAND_CEIL[tgt]} µmol·m⁻²·s⁻¹, the top of the ${C.BANDS[tgt].label} band, where the requirement drops to ${C.BANDS[tgt].reqCO2} ppm.`, links: [] };
+    } else if (inp.co2Method === 'diy') {
+      lever = { kind: 'co2', text: `This is a stability problem, not an amount problem: a yeast rig averages near the ${reqCO2} ppm this light asks for, but output sags and swings as the bottle ages (modelled stability 60%), so the effective supply is ${Math.round(sCo2 * 100)}%. Stagger two bottles a week apart, or move to pressurized CO₂ — fix that before touching light or fertilizer.`, links: co2Links };
+    } else if (inp.co2Method === 'pressurized') {
+      lever = { kind: 'co2', text: `Raise CO₂ to ${reqCO2} ppm and hold it there through the photoperiod — you're targeting ${n1(rawCO2)} ppm now. On a timer, start it about an hour before lights-on, and check the level you're actually achieving.`, links: co2Links };
+    } else if (inp.co2Method === 'liquid') {
+      const ceil = ceilingFor(supCO2);
+      lever = { kind: 'co2', parCeiling: ceil, text: `Liquid carbon can't deliver the ${reqCO2} ppm of CO₂ this light asks for — it isn't CO₂ (note 4). Move to pressurized CO₂, or make the equivalent light move: keep PAR under ${ceil} µmol·m⁻²·s⁻¹, the top of the band whose CO₂ requirement your supply meets.`, links: co2Links };
+    } else {
+      const ceil = ceilingFor(supCO2);
+      lever = { kind: 'co2', parCeiling: ceil, text: `Add CO₂: this light level asks for ${reqCO2} ppm, and water in equilibrium with air holds about 3. If you don't want to add CO₂, the equivalent move is light — keep PAR under ${ceil} µmol·m⁻²·s⁻¹, the top of the band whose CO₂ requirement 3 ppm meets.`, links: co2Links };
+    }
+  } else if (sNut < 0.9) {
+    let text;
+    if (inp.regime === 'custom') {
+      text = `Raise your custom NO₃ to ${n1(reqNO3)} ppm/week — you're entering ${n1(sup.no3)}. The dosing pages turn that target into grams.`;
+    } else if (inp.regime === 'ei') {
+      text = `You're already on EI, the top rung — at this plant density it supplies ${n1(sup.no3)} of the ${n1(reqNO3)} ppm/week NO₃ this light level requires. Set a custom NO₃ target of ${n1(reqNO3)} ppm/week; the dosing pages turn it into grams.`;
+    } else {
+      const next = C.LADDER[C.LADDER.indexOf(inp.regime) + 1];
+      text = `Step nutrients up one rung — from ${regimeDef.label} to ${C.REGIMES[next].label} — or set a custom NO₃ target of ${n1(reqNO3)} ppm/week. The dosing pages turn regimes into grams.`;
+    }
+    lever = { kind: 'nutrients', text, links: [{ href: '../ei-dosing/', text: 'EI dosing' }, { href: '../pps-pro/', text: 'PPS-Pro dosing' }] };
+  } else if (inp.hours > 10) {
+    lever = { kind: 'light-duration', text: 'Cut the photoperiod to 8–10 h. At this intensity the corners balance; the extra hours give algae time the plants can\'t use.', links: [] };
+  } else {
+    lever = { kind: 'none', text: 'No lever to pull — hold settings and observe.', links: [] };
+  }
+
+  // -- triangle position: capped intensities, barycentric weights --
+  const intensities = {
+    light: Math.min(1, par / 100),
+    co2: Math.min(1, supCO2 / 30),
+    nutrients: Math.min(1, sup.no3 / 22.5)
+  };
+  const tp = trianglePoint(intensities.light, intensities.co2, intensities.nutrients);
+
+  return {
+    state: 'ok',
+    band: { key: band.key, label: band.label }, bandIndex: bandIdx,
+    par, parSource, dli,
+    required,
+    supplied: {
+      co2Raw: rawCO2, co2: supCO2, stability: method.stability, cap, capWarning,
+      no3: sup.no3, po4: sup.po4, k: sup.k, fe: sup.fe
+    },
+    sCo2, sNut, inBalance, limiting, verdict,
+    flags, risk, lever,
+    intensities,
+    weights: tp ? tp.weights : null,
+    point: tp ? { x: tp.x, y: tp.y } : null
+  };
+}
+/* === END TRIANGLE ENGINE === */
+
+function triSVG(r) {
+  const S = 260, ox = 20, oy = 252;
+  const X = x => ox + x * S, Y = y => oy - y * S;
+  const top = Math.sqrt(3) / 2;
+  const poly = [[0.5, top], [0, 0], [1, 0]].map(([x, y]) => `${X(x)},${Y(y)}`).join(' ');
+  const dot = r.point ? `<circle cx="${X(r.point.x).toFixed(1)}" cy="${Y(r.point.y).toFixed(1)}" r="5"></circle>` : '';
+  return `<svg class="tri" viewBox="0 0 300 272" role="img" aria-label="Triangle plot: where the tank sits among the light, CO2 and nutrient corners">
+    <polygon points="${poly}"></polygon>${dot}
+    <text x="${X(0.5)}" y="${Y(top) - 8}" text-anchor="middle">Light</text>
+    <text x="${X(0)}" y="${Y(0) + 16}" text-anchor="middle">CO₂</text>
+    <text x="${X(1)}" y="${Y(0) + 16}" text-anchor="middle">Nutrients</text></svg>`;
+}
+
+function clearResults() {
+  $('verdict').textContent = ''; $('bandLine').textContent = '';
+  $('bandTbl').innerHTML = ''; $('triSvg').innerHTML = ''; $('triNote').textContent = '';
+  $('flags').innerHTML = ''; $('leverText').textContent = ''; $('leverLinks').innerHTML = '';
+}
+
+function render() {
+  $('co2TargetRow').style.display = $('co2Method').value === 'pressurized' ? '' : 'none';
+  $('customRow').style.display = $('regime').value === 'custom' ? '' : 'none';
+  const inp = {
+    par: $('par').value === '' ? null : num('par'),
+    parClass: $('parClass').value || null,
+    hours: num('photo'),
+    co2Method: $('co2Method').value,
+    co2Target: num('co2Target'),
+    density: $('density').value,
+    livestock: $('stock').value,
+    regime: $('regime').value,
+    customNO3: num('customNO3')
+  };
+  const r = triangleBalance(inp);
+  $('err').textContent = '';
+  if (r.state === 'error') { $('err').textContent = r.error; clearResults(); return; }
+  if (r.state === 'insufficient') {
+    clearResults();
+    $('verdict').textContent = 'Not enough information yet.';
+    $('bandLine').textContent = r.message;
+    $('triNote').textContent = 'No point is plotted until the light corner is known.';
+    return;
+  }
+  const pct = s => `${Math.round(s * 100)}%`;
+  $('verdict').textContent = r.verdict;
+  $('bandLine').textContent = `${r.band.label} light band · PAR ${fmt(r.par, 0)} µmol·m⁻²·s⁻¹` +
+    (r.parSource === 'class' ? ' (nominal class figure)' : '') +
+    ` · DLI ${fmt(r.dli)} mol·m⁻²·day⁻¹ · photoperiod ${fmt(inp.hours, 1)} h`;
+  const rows = [
+    ['CO₂ (ppm, lights-on)', fmt(r.required.co2, 1),
+      fmt(r.supplied.co2, 1) + (r.supplied.capWarning ? ` — capped from ${fmt(r.supplied.co2Raw, 0)} by your livestock` : ''),
+      pct(r.sCo2), r.limiting === 'co2'],
+    ['NO₃ (ppm/week)', fmt(r.required.no3, 1), fmt(r.supplied.no3, 1), pct(r.sNut), r.limiting === 'nutrients'],
+    ['PO₄ (ppm/week)', fmt(r.required.po4, 1), r.supplied.po4 == null ? '—' : fmt(r.supplied.po4, 1), '—', false],
+    ['K (ppm/week)', fmt(r.required.k, 1), r.supplied.k == null ? '—' : fmt(r.supplied.k, 1), '—', false],
+    ['Fe (ppm/week)', fmt(r.required.fe), r.supplied.fe == null ? '—' : fmt(r.supplied.fe), '—', false]
+  ];
+  $('bandTbl').innerHTML = rows.map(([name, req, sup, suf, key]) =>
+    `<tr${key ? ' class="key"' : ''}><td>${name}</td><td>${req}</td><td>${sup}</td><td>${suf}</td></tr>`).join('');
+  $('triSvg').innerHTML = triSVG(r);
+  $('triNote').textContent = 'Where the tank sits among the three corners — a position visual. The verdict above is computed from the sufficiencies, not read off this plot (note 11).';
+  $('flags').innerHTML = r.flags.length
+    ? r.flags.map(f => `<div class="msg ${f.level === 'high' ? 'bad' : f.level === 'watch' ? 'warn' : 'note'}"><strong>${f.level === 'high' ? 'High' : f.level === 'watch' ? 'Watch' : 'Note'} —</strong> ${f.text}</div>`).join('')
+    : '<p class="sub" style="margin:0">No imbalance flags at these settings.</p>';
+  $('leverText').textContent = r.lever.text;
+  $('leverLinks').innerHTML = r.lever.links.map(l => `<a href="${l.href}" style="color:var(--accent)">${l.text}</a>`).join(' · ');
+}
+
+// Pre-fill volume from the tank calculator if the user has used it on this
+// device. Read-only: this page writes no storage keys of its own in v1.
+(function prefill() {
+  const L = parseFloat(store.get('volumeL')), u = store.get('volUnit');
+  if (u && VOL[u]) $('volUnit').value = u;
+  if (L > 0) $('vol').value = +(L / VOL[$('volUnit').value]).toFixed(1);
+})();
+// Keep the physical volume when switching units (display only — still no write).
+let volPrev = $('volUnit').value;
+$('volUnit').addEventListener('change', e => {
+  const v = num('vol');
+  if (v > 0) $('vol').value = +(v * VOL[volPrev] / VOL[e.target.value]).toFixed(1);
+  volPrev = e.target.value;
+});
+$('f').addEventListener('input', render);
+$('f').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
